@@ -1,0 +1,7 @@
+#!/bin/sh
+
+MPCALLOC_PREFIX=@CMAKE_INSTALL_PREFIX@
+
+export LD_PRELOAD=${MPCALLOC_PREFIX}/lib/libmpcalloc.so
+
+"$@"

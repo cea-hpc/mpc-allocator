@@ -1,0 +1,5 @@
+#!/bin/sh
+
+MPCALLOC_PREFIX=@CMAKE_INSTALL_PREFIX@
+
+echo "-L${MPCALLOC_PREFIX}/lib -Wl,-rpath ${MPCALLOC_PREFIX}/lib -lmpcalloc"

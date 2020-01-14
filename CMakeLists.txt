@@ -54,7 +54,6 @@ mpc_check_openpa()
 message(STATUS "============== SUMMARY ==================")
 message(STATUS "CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
 print_variable_status("ENABLE_RPATH")
-print_variable_status("DISABLE_UNIT_TESTS")
 print_variable_status("HWLOC_FOUND")
 print_variable_status("OPENPA_FOUND")
 message(STATUS "=========================================")
@@ -71,3 +70,12 @@ endif(NOT DISABLE_UNIT_TESTS)
 install(FILES include/mpcalloc.h DESTINATION include/)
 
 install(FILES src/sctk_alloc_posix.h src/sctk_alloc_common.h src/sctk_alloc_to_recode.h src/sctk_alloc_on_node.h DESTINATION include/mpcalloc/)
+
+
+#Compilation Helpers
+
+configure_file(bin/mpcalloc_cflags.in bin/mpcalloc_cflags @ONLY)
+configure_file(bin/mpcalloc_ldflags.in bin/mpcalloc_ldflags @ONLY)
+configure_file(bin/mpcalloc_preload.in bin/mpcalloc_preload @ONLY)
+
+install(FILES ${CMAKE_BINARY_DIR}/bin/mpcalloc_cflags ${CMAKE_BINARY_DIR}/bin/mpcalloc_ldflags ${CMAKE_BINARY_DIR}/bin/mpcalloc_preload DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)

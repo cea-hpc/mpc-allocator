@@ -1,0 +1,5 @@
+#!/bin/sh
+
+MPCALLOC_PREFIX=@CMAKE_INSTALL_PREFIX@
+
+echo "-I${MPCALLOC_PREFIX}/include -I${MPCALLOC_PREFIX}/mpcalloc/"
