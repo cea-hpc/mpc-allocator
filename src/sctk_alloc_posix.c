@@ -91,9 +91,9 @@ static struct sctk_alloc_chain sctk_global_egg_chain;
 /************************* FUNCTION ************************/
 #ifdef MPC_check_compatibility
 /** Defined in MPC **/
-int mpc_topology_get_current_cpu();
+int mpcalloc_topology_get_current_cpu();
 /** Defined in MPC **/
-int mpc_topology_get_numa_node_from_cpu (int cpu);
+int mpcalloc_topology_get_numa_node_from_cpu (int cpu);
 #endif
 
 /*************************** FUNCTION **********************/
@@ -255,7 +255,7 @@ SCTK_INTERN void sctk_alloc_posix_mmsrc_numa_init_phase_numa(void)
 
 	//get number of nodes
 	SCTK_NO_PDEBUG("Init numa nodes");
-	nodes = mpc_topology_get_numa_node_count();
+	nodes = mpcalloc_topology_get_numa_node_count();
 	assume_m(nodes <= SCTK_MAX_NUMA_NODE,"Caution, you get more node than supported by allocator. Limit is setup by SCTK_MAX_NUMA_NODE macro in sctk_alloc_posix.c.");
 
 	//debug
@@ -272,7 +272,7 @@ SCTK_INTERN void sctk_alloc_posix_mmsrc_numa_init_phase_numa(void)
 	}
 
 	//setup malloc on node
-	sctk_malloc_on_node_init(mpc_topology_get_numa_node_count());
+	sctk_malloc_on_node_init(mpcalloc_topology_get_numa_node_count());
 	#endif
 
 	//mark NUMA init phase as done.
@@ -307,7 +307,7 @@ int sctk_alloc_posix_source_round_robin(void) {
 
   sctk_alloc_spinlock_lock(&lock);
   res = cnt;
-  cnt = (cnt + 1) % mpc_topology_get_numa_node_count();
+  cnt = (cnt + 1) % mpcalloc_topology_get_numa_node_count();
   sctk_alloc_spinlock_unlock(&lock);
   return res;
 }
@@ -527,8 +527,6 @@ SCTK_INTERN struct sctk_alloc_chain * sctk_alloc_posix_setup_tls_chain(void)
 	//debug
 	SCTK_NO_PDEBUG("sctk_alloc_posix_setup_tls_chain()");
 
-	//profiling
-	SCTK_PROFIL_START(sctk_alloc_posix_setup_tls_chain);
 
 	//check errors
 	assert(sctk_get_tls_chain() == NULL);
@@ -542,8 +540,6 @@ SCTK_INTERN struct sctk_alloc_chain * sctk_alloc_posix_setup_tls_chain(void)
 	//make it default for current thread
 	sctk_alloc_posix_set_default_chain(chain);
 
-	SCTK_PROFIL_END(sctk_alloc_posix_setup_tls_chain);
-
 	//return it
 	return chain;
 }
@@ -552,10 +548,9 @@ SCTK_INTERN struct sctk_alloc_chain * sctk_alloc_posix_setup_tls_chain(void)
 SCTK_PUBLIC void * sctk_calloc (size_t nmemb, size_t size)
 {
 	void * ptr;
-	SCTK_PROFIL_START(sctk_calloc);
+
 	ptr = sctk_malloc(nmemb * size);
 	memset(ptr,0,nmemb * size);
-	SCTK_PROFIL_END(sctk_calloc);
 	return ptr;
 }
 
@@ -567,8 +562,6 @@ SCTK_PUBLIC void * sctk_malloc (size_t size)
 	struct sctk_alloc_chain * local_chain;
 	void * res;
 
-	//profile
-	SCTK_PROFIL_START(sctk_malloc);
 
 	//get TLS
 	local_chain = sctk_get_tls_chain();
@@ -600,7 +593,7 @@ SCTK_PUBLIC void * sctk_malloc (size_t size)
 	//done allocation
 	res = sctk_alloc_chain_alloc(local_chain,size);
 	SCTK_PTRACE("void * ptr%p = malloc(%ld);//chain = %p",res,size,local_chain);
-	SCTK_PROFIL_END(sctk_malloc);
+
 	return res;
 }
 
@@ -611,8 +604,6 @@ SCTK_PUBLIC void * sctk_memalign(size_t boundary,size_t size)
 	struct sctk_alloc_chain * local_chain;
 	void * res;
 
-	//profile
-	SCTK_PROFIL_START(sctk_memalign);
 
 	//get TLS
 	local_chain = sctk_get_tls_chain();
@@ -640,17 +631,17 @@ SCTK_PUBLIC void * sctk_memalign(size_t boundary,size_t size)
 	//done allocation
 	res = sctk_alloc_chain_alloc_align(local_chain,boundary,size);
 	SCTK_PTRACE("void * ptr%p = memalign(%ld,%ld);//chain = %p",res,boundary,size,local_chain);
-	SCTK_PROFIL_END(sctk_memalign);
+
 	return res;
 }
 
 /************************* FUNCTION ************************/
 SCTK_PUBLIC int sctk_posix_memalign(void **memptr, size_t boundary, size_t size)
 {
-	SCTK_PROFIL_START(sctk_posix_memalign);
+
 	assert(memptr != NULL);
 	*memptr = sctk_memalign(boundary,size);
-	SCTK_PROFIL_END(sctk_posix_memalign);
+
 	if (memptr == NULL)
 		return ENOMEM;
 	else
@@ -669,7 +660,7 @@ SCTK_PUBLIC void sctk_free (void * ptr)
 	static int cnt = 0;
 	#endif
 
-	SCTK_PROFIL_START(sctk_free);
+
 	local_chain = sctk_get_tls_chain();
 
 	//setup the local chain if not already done
@@ -731,7 +722,7 @@ SCTK_PUBLIC void sctk_free (void * ptr)
 		SCTK_ALLOC_HOOK(chain_remote_free,chain,local_chain,ptr);
 		sctk_alloc_rfq_register(&chain->rfq,ptr);
 	}
-	SCTK_PROFIL_END(sctk_free);
+
 }
 
 /************************* FUNCTION ************************/
@@ -792,7 +783,6 @@ SCTK_PUBLIC void * sctk_realloc (void * ptr, size_t size)
 	struct sctk_alloc_macro_bloc * macro_bloc = NULL;
 	void * res = NULL;
 
-	SCTK_PROFIL_START(sctk_realloc);
 
 	//trivial cases
 	if (ptr == NULL)
@@ -852,7 +842,7 @@ SCTK_PUBLIC void * sctk_realloc (void * ptr, size_t size)
 	}
 
 	SCTK_PTRACE("//ptr%p = realloc(ptr%p,%llu); //%p",res,ptr,size);
-	SCTK_PROFIL_END(sctk_realloc);
+
 	return res;
 }
 
@@ -861,7 +851,6 @@ void *sctk_realloc_inter_chain(void *ptr, size_t size) {
   sctk_size_t copy_size = size;
   void *res = NULL;
 
-  SCTK_PROFIL_START(sctk_realloc_inter_chain);
 
   // when using hooking, we need to know the chain
   if (SCTK_ALLOC_HAS_HOOK(chain_next_is_realloc)) {
@@ -884,7 +873,6 @@ void *sctk_realloc_inter_chain(void *ptr, size_t size) {
   if (ptr != NULL)
     sctk_free(ptr);
 
-  SCTK_PROFIL_END(sctk_realloc_inter_chain);
 
   return res;
 }
@@ -935,10 +923,8 @@ SCTK_INTERN void sctk_alloc_posix_numa_migrate_chain(struct sctk_alloc_chain * c
 	int old_numa_node = -1;
 	int new_numa_node = -1;
 
-	SCTK_PROFIL_START(sctk_alloc_posix_numa_migrate);
-
 	#ifdef MPC_Theads
-	SCTK_NO_PDEBUG("Migration on %d",mpc_topology_get_current_cpu());
+	SCTK_NO_PDEBUG("Migration on %d",mpcalloc_topology_get_current_cpu());
 	#endif
 
 	//if NULL nothing to do otherwise remind the current mm source
@@ -964,7 +950,6 @@ SCTK_INTERN void sctk_alloc_posix_numa_migrate_chain(struct sctk_alloc_chain * c
 	if (old_numa_node != new_numa_node && new_numa_node != SCTK_DEFAULT_NUMA_MM_SOURCE_ID)
 		sctk_alloc_chain_numa_migrate(chain,new_numa_node,true,true,new_source);
 
-	SCTK_PROFIL_END(sctk_alloc_posix_numa_migrate);
 }
 
 /************************* FUNCTION ************************/

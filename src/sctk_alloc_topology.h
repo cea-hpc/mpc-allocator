@@ -37,8 +37,8 @@ extern "C"
 
 /************************* FUNCTION ************************/
 
-SCTK_INTERN int mpc_topology_has_numa_nodes(void);
-SCTK_INTERN int mpc_topology_get_numa_node_count (void);
+SCTK_INTERN int mpcalloc_topology_has_numa_nodes(void);
+SCTK_INTERN int mpcalloc_topology_get_numa_node_count (void);
 SCTK_INTERN void sctk_alloc_init_topology(void);
 SCTK_INTERN int sctk_get_preferred_numa_node(void);
 SCTK_INTERN int sctk_alloc_init_on_numa_node(void);
@@ -46,7 +46,7 @@ SCTK_INTERN void sctk_alloc_topology_bind_thread_on_core(int id);
 SCTK_INTERN bool sctk_alloc_is_numa(void);
 
 #ifdef HAVE_HWLOC
-SCTK_INTERN hwloc_topology_t mpc_topology_get(void);
+SCTK_INTERN hwloc_topology_t mpcalloc_topology_get(void);
 SCTK_INTERN void sctk_alloc_migrate_numa_mem(void * addr,sctk_size_t size,int target_numa_node);
 #endif //HAVE_HWLOC
 

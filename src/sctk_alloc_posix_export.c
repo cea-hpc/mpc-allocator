@@ -28,18 +28,16 @@
 #include "sctk_alloc_posix.h"
 #include "sctk_alloc_debug.h"
 
-
-
 /************************* FUNCTION ************************/
 void * calloc (size_t nmemb, size_t size)
 {
 	void * res;
-	SCTK_PROFIL_START(calloc);
+
 	SCTK_ALLOC_MMCHECK_DISABLE_REPORT();
 	res = sctk_calloc(nmemb,size);
 	SCTK_ALLOC_MMCHECK_ENABLE_REPORT();
 	SCTK_ALLOC_MMCHECK_REG(res,nmemb*size,true);
-	SCTK_PROFIL_END(calloc);
+
 	return res;
 }
 
@@ -47,43 +45,43 @@ void * calloc (size_t nmemb, size_t size)
 void * malloc (size_t size)
 {
 	void * res;
-	SCTK_PROFIL_START(malloc);
+
 	SCTK_ALLOC_MMCHECK_DISABLE_REPORT();
 	res = sctk_malloc(size);
 	SCTK_ALLOC_MMCHECK_ENABLE_REPORT();
 	SCTK_ALLOC_MMCHECK_REG(res,size,false);
-	SCTK_PROFIL_END(malloc);
+
 	return res;
 }
 
 /************************* FUNCTION ************************/
 void free (void * ptr)
 {
-	SCTK_PROFIL_START(free);
+
 	SCTK_ALLOC_MMCHECK_DISABLE_REPORT();
 	SCTK_ALLOC_MMCHECK_UNREG(ptr);
 	sctk_free(ptr);
 	SCTK_ALLOC_MMCHECK_ENABLE_REPORT();
-	SCTK_PROFIL_END(free);
+
 }
 
 /************************* FUNCTION ************************/
 /** @todo do some check at compile time, because, some OS have more parameters in cfree prototype. **/
 void cfree(void * ptr)
 {
-	SCTK_PROFIL_START(cfree);
+
 	SCTK_ALLOC_MMCHECK_DISABLE_REPORT();
 	SCTK_ALLOC_MMCHECK_UNREG(ptr);
 	sctk_free(ptr);
 	SCTK_ALLOC_MMCHECK_ENABLE_REPORT();
-	SCTK_PROFIL_END(cfree);
+
 }
 
 /************************* FUNCTION ************************/
 void * realloc (void * ptr, size_t size)
 {
 	void * res;
-	SCTK_PROFIL_START(realloc);
+
 	SCTK_ALLOC_MMCHECK_DISABLE_REPORT();
 	SCTK_ALLOC_MMCHECK_UNREG(ptr);
 	res = sctk_realloc(ptr,size);
@@ -92,7 +90,7 @@ void * realloc (void * ptr, size_t size)
 	**/
 	SCTK_ALLOC_MMCHECK_REG(res,size,true);
 	SCTK_ALLOC_MMCHECK_ENABLE_REPORT();
-	SCTK_PROFIL_END(realloc);
+
 	return res;
 }
 
@@ -101,7 +99,7 @@ int posix_memalign(void **memptr, size_t boundary, size_t size)
 {
 	int res = 0;
 
-	SCTK_PROFIL_START(posix_memalign);
+
 
 	//limit imposed by posix_memalign linux manpage
 	if (boundary % sizeof(void*) != 0 && sctk_alloc_is_power_of_two(boundary))
@@ -112,7 +110,7 @@ int posix_memalign(void **memptr, size_t boundary, size_t size)
 		*memptr = sctk_memalign(boundary,size);
 	}
 
-	SCTK_PROFIL_END(posix_memalign);
+
 	return res;
 }
 
@@ -121,7 +119,6 @@ void * memalign(size_t boundary,size_t size)
 {
 	void * res;
 
-	SCTK_PROFIL_START(memalign);
 	SCTK_ALLOC_MMCHECK_DISABLE_REPORT();
 
 	//limit imposed by posix_memalign linux manpage
@@ -135,7 +132,7 @@ void * memalign(size_t boundary,size_t size)
 
 	SCTK_ALLOC_MMCHECK_ENABLE_REPORT();
 	SCTK_ALLOC_MMCHECK_REG(res,size,false);
-	SCTK_PROFIL_END(memalign);
+
 
 	return res;
 };

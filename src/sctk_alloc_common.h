@@ -140,13 +140,6 @@ extern "C"
 #define SCTK_DEFAULT_NUMA_MM_SOURCE_ID SCTK_MAX_NUMA_NODE
 
 /************************** MACROS *************************/
-//If not in MPC we didn't support internal profiling
-
-#define SCTK_PROFIL_START(x) /** No profiling support **/
-#define SCTK_PROFIL_END(x)   /** No profiling support **/
-
-
-/************************** MACROS *************************/
 /**
  * Macro to align x on required alignment. It internally use a bit per bit AND operation.
  * @param x Define the value to align.

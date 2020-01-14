@@ -69,3 +69,5 @@ endif(NOT DISABLE_UNIT_TESTS)
 ########################################################################
 #Files to install
 install(FILES include/mpcalloc.h DESTINATION include/)
+
+install(FILES src/sctk_alloc_posix.h src/sctk_alloc_common.h src/sctk_alloc_to_recode.h src/sctk_alloc_on_node.h DESTINATION include/mpcalloc/)
