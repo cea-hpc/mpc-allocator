@@ -24,24 +24,18 @@
 #define SCTK_ALLOC_DEBUG_H
 
 /************************** HEADERS ************************/
-#ifdef MPC_Common
-#include "sctk_debug.h"
-#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 
 //compat with NDEBUG system because using this has consequences in MPC sources.
 #ifdef NDEBUG
 #undef SCTK_ALLOC_DEBUG
-#elif ! defined(MPC_Common)
 #define SCTK_ALLOC_DEBUG
 #endif //NDEBUG
 
 /************************** MACROS *************************/
-#if defined(MPC_Common)
-	#define SCTK_PDEBUG(...) sctk_debug(__VA_ARGS__)
-	#define SCTK_CRASH_DUMP sctk_alloc_crash_dump
-#elif defined(SCTK_ALLOC_DEBUG)
+#if defined(SCTK_ALLOC_DEBUG)
 	#define SCTK_PDEBUG(...) sctk_alloc_pdebug(__VA_ARGS__)
 	#define SCTK_CRASH_DUMP sctk_alloc_crash_dump
 #else //SCTK_ALLOC_DEBUG
@@ -95,6 +89,16 @@
 	#define SCTK_ALLOC_MMCHECK_REG(ptr,size,zeroed)   do {} while(0)
 	#define SCTK_ALLOC_MMCHECK_UNREG(ptr)             do {} while(0)
 #endif //HAVE_MEMCHECK_H
+
+/************************** MACROS *************************/
+
+/* For not used fuctions (disable compiler warning) for allocator */
+#ifdef __GNUC__
+#define __AL_UNUSED__ __attribute__ ((__unused__))
+#else
+#define __AL_UNUSED__
+#endif
+
 
 /************************** MACROS *************************/
 #ifndef assert

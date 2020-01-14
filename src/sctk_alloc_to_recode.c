@@ -20,20 +20,16 @@
 /* #                                                                      # */
 /* ######################################################################## */
 
-#if !defined(MPC_Common) || defined(MPC_PosixAllocator)
 
 /************************** HEADERS ************************/
 #include <sctk_config.h>
-#include <sctk_spinlock.h>
+#include <mpc_common_spinlock.h>
 #include "sctk_alloc_posix.h"
 #include "sctk_alloc_debug.h"
 #include "sctk_alloc_posix.h"
 #include "sctk_alloc_chain.h"
 #include <sys/mman.h>
 
-#ifdef MPC_Threadss
-#include "sctk_context.h"
-#endif
 
 /************************* FUNCTION ************************/
 void * sctk_user_mmap (void *start, size_t length, int prot, int flags,int fd, off_t offset)
@@ -90,5 +86,3 @@ void __sctk_free(void * ptr,struct sctk_alloc_chain * chain)
 {
 	sctk_alloc_chain_free(chain,ptr);
 };
-
-#endif //!defined(MPC_Common) || defined(MPC_PosixAllocator)

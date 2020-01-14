@@ -20,7 +20,6 @@
 /* #                                                                      # */
 /* ######################################################################## */
 
-#if !defined(MPC_Common) || defined(MPC_PosixAllocator)
 
 /************************** HEADERS ************************/
 #include <stdlib.h>
@@ -74,7 +73,7 @@ SCTK_INTERN void sctk_malloc_on_node_init(int numa_nodes)
 	memset(sctk_global_alloc_on_node_mm_src,0,sizeof(sctk_global_alloc_on_node_mm_src));
 
 	//do nothing if not numa node
-	if ( sctk_is_numa_node() == false)
+	if ( mpc_topology_has_numa_nodes() == false)
 		return;
 
 	//setup allocations chains for all nodes
@@ -140,11 +139,7 @@ struct sctk_alloc_chain *sctk_malloc_on_node_get_chain(int node) {
 void *sctk_malloc_on_node_uma(size_t size, int node) {
   assume_m(node == 0, "You request mapping on NUMA node different from 0, but "
                       "their is no NUMA node or NUMA isn't supported.");
-#if defined(MPC_Common) && !defined(MPC_PosixAllocator)
   return malloc(size);
-#else  // defined(MPC_Common) && !defined(MPC_PosixAllocator)
-  return sctk_malloc(size);
-#endif // defined(MPC_Common) && !defined(MPC_PosixAllocator)
 }
 
 /************************* FUNCTION ************************/
@@ -158,7 +153,7 @@ void *sctk_malloc_on_node_numa(size_t size, int node) {
   struct sctk_alloc_chain *chain;
 
   // check if NUMA is enabled.
-  if (sctk_is_numa_node()) {
+  if (mpc_topology_has_numa_nodes()) {
     // get the good chain
     chain = sctk_malloc_on_node_get_chain(node);
     assert(chain != NULL);
@@ -189,4 +184,3 @@ SCTK_PUBLIC void * sctk_malloc_on_node (size_t size, int node)
 	#endif //HAVE_HWLOC
 }
 
-#endif //defined(MPC_Common) && defined(MPC_PosixAllocator)

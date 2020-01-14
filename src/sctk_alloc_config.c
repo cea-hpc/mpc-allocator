@@ -26,14 +26,12 @@
 #include "sctk_alloc_config.h"
 #include "sctk_alloc_debug.h"
 
-#ifdef MPC_Common
-#include "sctk_runtime_config_struct_defaults.h"
-#endif //MPC_Common
+
 
 /************************* GLOBALS *************************/
-#ifndef MPC_Common
+
 struct sctk_runtime_config_struct_allocator sctk_alloc_global_config;
-#endif //MPC_Common
+
 
 /************************* FUNCTION ************************/
 const char *sctk_alloc_bool_to_str(bool value) {
@@ -44,7 +42,7 @@ const char *sctk_alloc_bool_to_str(bool value) {
 }
 
 /************************* FUNCTION ************************/
-#ifndef MPC_Common
+
 void sctk_alloc_print_config(void) {
   printf("=============== MPC ALLOC CONFIG =================\n");
   printf("MPCALLOC_PRINT_CONFIG       : %s\n",
@@ -67,7 +65,7 @@ void sctk_alloc_print_config(void) {
          sctk_alloc_global_config.mm_sources);
   printf("==================================================\n");
 }
-#endif //MPC_Common
+
 
 /************************* FUNCTION ************************/
 /**
@@ -75,11 +73,11 @@ void sctk_alloc_print_config(void) {
 **/
 void sctk_alloc_config_init_static_defaults(
     struct sctk_runtime_config_struct_allocator *config) {
-#ifndef MPC_Common
+
   config->print_config = false;
   config->numa_round_robin = false;
   config->mm_sources = 4;
-#endif // MPC_Common
+
 
   config->strict = false;
   config->numa_migration = false;
@@ -89,7 +87,7 @@ void sctk_alloc_config_init_static_defaults(
   config->keep_max = 8 * 1024 * 1024;            // 8MB
   config->keep_mem = 512 * 1024 * 1024;          // 512MB
 
-#if !defined(MPC_Common) && defined(__MIC__)
+#if defined(__MIC__)
   config->numa_round_robin = true;
 #endif
 
@@ -154,12 +152,7 @@ sctk_size_t sctk_alloc_get_size_from_env(const char *var_name,
  * This method is called to force config initialization just after egg_allocator init steps.
  * It carn perform allocation, so we can use the MPC config system here.
 **/
-#ifdef MPC_Common
-void sctk_alloc_config_init(void)
-{
-	sctk_runtime_config_init();
-}
-#else //MPC_Common
+
 void sctk_alloc_config_init(void)
 {
 	sctk_alloc_global_config.print_config = sctk_alloc_get_bool_from_env("MPCALLOC_PRINT_CONFIG",sctk_alloc_global_config.print_config);
@@ -174,7 +167,6 @@ void sctk_alloc_config_init(void)
 	if (sctk_alloc_global_config.print_config)
 		sctk_alloc_print_config();
 }
-#endif //MPC_Common
 
 /************************* FUNCTION ************************/
 /**
@@ -185,16 +177,9 @@ void sctk_alloc_config_init(void)
  * why we must only use parameters which can be replaced on fly or which didn't impact
  * egg_allocator.
 **/
-#ifdef MPC_Common
-void sctk_alloc_config_egg_init(void)
-{
-	//TODO : Damn, with MPC, we may use sctk_runtime_config_struct_init_allocator() but can't due to
-	//usage of strdup in sctk_runtime_config_map_entry_parse_size(), may be we can avoid this
-	sctk_alloc_config_init_static_defaults(&__sctk_global_runtime_config__.modules.allocator);
-}
-#else //MPC_Common
+
 void sctk_alloc_config_egg_init(void)
 {
 	sctk_alloc_config_init_static_defaults(&sctk_alloc_global_config);
 }
-#endif //MPC_Common
+

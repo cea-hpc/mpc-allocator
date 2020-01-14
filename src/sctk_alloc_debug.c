@@ -62,11 +62,8 @@ static const char SCTK_ALLOC_TRACE_FILE[] = "alloc-trace-%d.txt";
 #endif
 
 //usage of safe write in MPC
-#ifdef MPC_Common
-	#include "sctk_io_helper.h"
-#else //MPC_Common
-	#define sctk_safe_write(fd,buf,count) write((fd),(buf),(count))
-#endif //MPC_Common
+#define mpc_common_io_safe_write(fd,buf,count) write((fd),(buf),(count))
+
 
 /************************* GLOBALS *************************/
 /** File descriptor for PTRACE output file. **/
@@ -127,7 +124,7 @@ void sctk_alloc_pdebug (const char * format,...)
 	va_start (param, format);
 	sctk_alloc_vsprintf (tmp2,4096, tmp, param);
 	va_end (param);
-	sctk_safe_write(STDERR_FILENO,tmp2,(unsigned int)strlen(tmp2));
+	mpc_common_io_safe_write(STDERR_FILENO,tmp2,(unsigned int)strlen(tmp2));
 }
 
 /************************* FUNCTION ************************/
@@ -149,7 +146,7 @@ void sctk_alloc_ptrace (const char * format,...)
 	va_start (param, format);
 	sctk_alloc_vsprintf (tmp2,4096, tmp, param);
 	va_end (param);
-	sctk_safe_write(SCTK_ALLOC_TRACE_FD,tmp2,(unsigned int)strlen(tmp2));
+	mpc_common_io_safe_write(SCTK_ALLOC_TRACE_FD,tmp2,(unsigned int)strlen(tmp2));
 	fflush(stderr);
 }
 #endif
@@ -162,13 +159,12 @@ void sctk_alloc_fprintf(int fd,const char * format,...)
 	va_start (param, format);
 	sctk_alloc_vsprintf (tmp,4096, format, param);
 	va_end (param);
-	sctk_safe_write(fd,tmp,(unsigned int)strlen(tmp));
+	mpc_common_io_safe_write(fd,tmp,(unsigned int)strlen(tmp));
 }
 
 /************************* FUNCTION ************************/
 void sctk_alloc_debug_dump_segment(int fd,void* base_addr, void* end_addr)
 {
-	sctk_size_t prev_size = 0;
 	sctk_alloc_vchunk vchunk;
 	
 	sctk_alloc_fprintf(fd,"============ SEGMENT %p - %p ============\n",base_addr,end_addr);
@@ -180,10 +176,6 @@ void sctk_alloc_debug_dump_segment(int fd,void* base_addr, void* end_addr)
 	while (((sctk_addr_t)sctk_alloc_get_large(vchunk)) + sctk_alloc_get_size(vchunk) < (sctk_addr_t)end_addr)
 	{
 		vchunk = sctk_alloc_get_next_chunk(vchunk);
-		if (vchunk->type == SCTK_ALLOC_CHUNK_TYPE_LARGE)
-			prev_size = sctk_alloc_get_prev_size(vchunk);
-		else
-			prev_size = 0;
 		sctk_alloc_fprintf(fd,"Bloc %p (align = %2d) %12ld [%s] in state %s\n",sctk_alloc_get_ptr(vchunk),sctk_alloc_get_addr(vchunk)%32,sctk_alloc_get_size(vchunk),
 		                   SCTK_ALLOC_TYPE_NAME[vchunk->type],SCTK_ALLOC_STATE_NAME[vchunk->state]);
 	}
@@ -192,7 +184,7 @@ void sctk_alloc_debug_dump_segment(int fd,void* base_addr, void* end_addr)
 }
 
 /************************* FUNCTION ************************/
-void sctk_alloc_debug_dump_free_lists(int fd, struct sctk_alloc_free_chunk* free_lists)
+void sctk_alloc_debug_dump_free_lists(__AL_UNUSED__ int fd, __AL_UNUSED__ struct sctk_alloc_free_chunk* free_lists)
 {
 	/*int i;
 	struct sctk_alloc_free_chunk * fchunk = NULL;
@@ -214,13 +206,13 @@ void sctk_alloc_debug_dump_free_lists(int fd, struct sctk_alloc_free_chunk* free
 }
 
 /************************* FUNCTION ************************/
-void sctk_alloc_debug_dump_thread_pool(int fd, struct sctk_thread_pool* pool)
+void sctk_alloc_debug_dump_thread_pool(__AL_UNUSED__ int fd, __AL_UNUSED__ struct sctk_thread_pool* pool)
 {
 	//sctk_alloc_debug_dump_free_lists(fd,pool->free_lists);
 }
 
 /************************* FUNCTION ************************/
-void sctk_alloc_debug_dump_alloc_chain(struct sctk_alloc_chain* chain)
+void sctk_alloc_debug_dump_alloc_chain(__AL_UNUSED__ struct sctk_alloc_chain* chain)
 {
 	/** @todo  Not thread safe **/
 	/*static int id = 0;

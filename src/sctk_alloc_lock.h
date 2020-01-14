@@ -32,9 +32,6 @@
 #endif
 
 /************************** MACROS *************************/
-#ifdef MPC_Threads
-	#include "sctk_spinlock.h"
-#endif
 
 #ifdef __MIC__
 	#define SCTK_ALLOC_USE_INTERNAL_LOCKS
@@ -59,17 +56,6 @@
 	#define sctk_alloc_spinlock_unlock(x) LeaveCriticalSection(x)
 	#define sctk_alloc_spinlock_trylock(x) (!TryEnterCriticalSection(x))
 	#define sctk_alloc_spinlock_destroy(x) DeleteCriticalSection(x)
-#elif defined(MPC_Threads)
-	#define SCTK_ALLOC_INIT_LOCK_TYPE sctk_spinlock_t
-	#define SCTK_ALLOC_INIT_LOCK_INITIALIZER SCTK_SPINLOCK_INITIALIZER
-	#define SCTK_ALLOC_INIT_LOCK_LOCK(x) sctk_spinlock_lock(x)
-	#define SCTK_ALLOC_INIT_LOCK_UNLOCK(x) sctk_spinlock_unlock(x)
-	#define sctk_alloc_spinlock_t sctk_spinlock_t
-	#define sctk_alloc_spinlock_init(x,y) sctk_spinlock_init(x,y)
-	#define sctk_alloc_spinlock_lock(x) sctk_spinlock_lock(x)
-	#define sctk_alloc_spinlock_unlock(x) sctk_spinlock_unlock(x)
-	#define sctk_alloc_spinlock_trylock(x) sctk_spinlock_trylock(x)
-	#define sctk_alloc_spinlock_destroy(x) do{}while(0)
 #elif defined(SCTK_USE_PTHREAD_MUTEX)
 	#define SCTK_ALLOC_INIT_LOCK_TYPE pthread_mutex_t
 	#define SCTK_ALLOC_INIT_LOCK_INITIALIZER PTHREAD_MUTEX_INITIALIZER
@@ -93,7 +79,7 @@
 	#define sctk_alloc_spinlock_unlock(x) sctk_alloc_internal_spinlock_unlock(x)
 	#define sctk_alloc_spinlock_trylock(x) sctk_alloc_internal_spinlock_trylock(x)
 	#define sctk_alloc_spinlock_destroy(x) sctk_alloc_internal_spinlock_destroy(x)
-#else //MPC_Threads
+#else
 	#define SCTK_ALLOC_INIT_LOCK_TYPE pthread_mutex_t
 	#define SCTK_ALLOC_INIT_LOCK_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 	#define SCTK_ALLOC_INIT_LOCK_LOCK(x) pthread_mutex_lock(x)
@@ -104,6 +90,6 @@
 	#define sctk_alloc_spinlock_unlock(x) pthread_spin_unlock(x)
 	#define sctk_alloc_spinlock_trylock(x) pthread_spin_trylock(x)
 	#define sctk_alloc_spinlock_destroy(x) pthread_spin_destroy(x)
-#endif //MPC_Threads
+#endif
 
 #endif //SCTK_ALLOC_LOCK_H

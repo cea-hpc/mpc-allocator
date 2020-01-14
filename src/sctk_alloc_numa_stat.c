@@ -110,7 +110,7 @@ SCTK_PUBLIC int sctk_alloc_numa_stat_get_node_of_page(void* ptr)
 	}
 }
 #else
-int sctk_alloc_numa_stat_get_node_of_page(void* ptr)
+int sctk_alloc_numa_stat_get_node_of_page(__AL_UNUSED__ void* ptr)
 {
 	warning("Caution, get_node_of_page is supported only on Linux with libnuma support.");
 	return -1;
@@ -128,9 +128,9 @@ SCTK_PUBLIC void sctk_alloc_numa_stat_init(struct sctk_alloc_numa_stat_s* stat)
 		sctk_alloc_numa_stat_open_pagemap();
 
 	//check number of nodes
-	if (sctk_is_numa_node())
+	if (mpc_topology_has_numa_nodes())
 	{
-		stat->numa_nodes = sctk_get_numa_node_number();
+		stat->numa_nodes = mpc_topology_get_numa_node_count();
 	} else {
 		stat->numa_nodes = 1;
 		warning("No NUMA node available\n");
@@ -175,14 +175,14 @@ void sctk_alloc_numa_stat_print(const struct sctk_alloc_numa_stat_s* stat,void *
 	printf("%-20s : %-10lu (%.01f Mo)\n","Total pages",stat->total_pages,(float)(stat->total_pages * 4) / 1024.0);
 	printf("%-20s : %-10lu (%.01f Mo / %.01f %%)\n","Total mapped",stat->total_mapped,(float)(stat->total_mapped * 4) / 1024.0,100.0*(float)stat->total_mapped/(float)stat->total_pages);
 	printf("%-20s : %lu\n","Non mapped",stat->total_pages - stat->total_mapped);
-	if (sctk_is_numa_node())
+	if (mpc_topology_has_numa_nodes())
 		for (i = 0 ; i < stat->numa_nodes ; i++)
 			printf("NUMA %-15d : %-10lu (%.01f Mo / %.01f %%)\n",i,stat->numa_pages[i],(float)(stat->numa_pages[i] * 4) / 1024.0,100.0*(float)stat->numa_pages[i] / (float)stat->total_mapped);
 	if (stat->numa_pages[SCTK_DEFAULT_NUMA_MM_SOURCE_ID] != 0)
 		printf("%-20s : %-10lu (%.01f Mo / %.01f %%)\n","NUMA unknown",stat->numa_pages[SCTK_DEFAULT_NUMA_MM_SOURCE_ID],(float)(stat->numa_pages[SCTK_DEFAULT_NUMA_MM_SOURCE_ID] * 4) / 1024.0,100.0*(float)stat->numa_pages[SCTK_DEFAULT_NUMA_MM_SOURCE_ID] / (float)stat->total_mapped);
 }
 #else //HAVE_LINUX_PAGEMAP
-SCTK_PUBLIC void sctk_alloc_numa_stat_print(const struct sctk_alloc_numa_stat_s* stat,void * ptr,sctk_size_t size)
+SCTK_PUBLIC void sctk_alloc_numa_stat_print(__AL_UNUSED__ const struct sctk_alloc_numa_stat_s* stat,__AL_UNUSED__ void * ptr,__AL_UNUSED__ sctk_size_t size)
 {
 	printf("%-20s : %s\n","Linux pagemap","Not supported");
 }
@@ -277,7 +277,7 @@ SCTK_PUBLIC void sctk_alloc_numa_stat_cumul(struct sctk_alloc_numa_stat_s* stat,
 SCTK_PUBLIC void sctk_alloc_numa_stat_cumul(struct sctk_alloc_numa_stat_s* stat, void* ptr, size_t size)
 {
 	//vars
-	int i;
+	unsigned int i;
 	size_t first_page = (size_t)ptr >> SCTK_ALLOC_NUMA_STAT_PAGE_SHIFT;
 	size_t last_page = first_page + (size >> SCTK_ALLOC_NUMA_STAT_PAGE_SHIFT);
 	static bool first_call = true;
@@ -355,7 +355,7 @@ SCTK_PUBLIC void sctk_alloc_numa_stat_print_detail(void* ptr, size_t size)
 	free(table);
 }
 #else //HAVE_LINUX_PAGEMAP
-SCTK_PUBLIC void sctk_alloc_numa_stat_print_detail(void* ptr, size_t size)
+SCTK_PUBLIC void sctk_alloc_numa_stat_print_detail(__AL_UNUSED__ void* ptr, __AL_UNUSED__ size_t size)
 {
 	static bool first_call = true;
 	if (first_call)
@@ -371,7 +371,7 @@ SCTK_PUBLIC void sctk_alloc_numa_check(bool fatal_on_fail, const char* filename,
 {
 	//vars
 	struct sctk_alloc_numa_stat_s numa_stat;
-	float ratio;
+	double ratio;
 
 	//errors
 	assert(filename != NULL);
@@ -382,7 +382,7 @@ SCTK_PUBLIC void sctk_alloc_numa_check(bool fatal_on_fail, const char* filename,
 	assert(min_ratio >= 0 && min_ratio <= 100);
 
 	//if not numa node can return immediately
-	if (sctk_is_numa_node() == false)
+	if (mpc_topology_has_numa_nodes() == false)
 		return;
 
 	//get numa stat

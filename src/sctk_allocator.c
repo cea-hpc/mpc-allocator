@@ -51,15 +51,6 @@
 #include "sctk_alloc_mmsrc_default.h"
 #include "sctk_alloc_hooks.h"
 
-#ifdef MPC_Message_Passing
-	#include "sctk_low_level_comm.h"
-#endif
-
-//for getpid
-//optional header
-#ifdef MPC_Common
-#include "sctk.h"
-#endif
 
 /************************* PORTABILITY *************************/
 #ifdef _WIN32
@@ -67,12 +58,9 @@
 	#define write _write
 #endif
 
-//usage of safe write in MPC
-#ifdef MPC_Common
-	#include "sctk_io_helper.h"
-#else //MPC_Common
-	#define sctk_safe_write(fd,buf,count) write((fd),(buf),(count))
-#endif //MPC_Common
+
+#define mpc_common_io_safe_write(fd,buf,count) write((fd),(buf),(count))
+
 
 /************************* GLOBALS *************************/
 /** @todo to move to a clean global structure, avoid spreading global elements everywhere **/
@@ -96,7 +84,7 @@ struct sctk_alloc_chain * sctk_alloc_chain_list[2] = {NULL,NULL};
  * with analytic function sctk_alloc_reverse_analytic_free_size()
  * CAUTION, if change values here, you need to update this function.
 **/
-const sctk_size_t SCTK_ALLOC_FREE_SIZES[SCTK_ALLOC_NB_FREE_LIST] = {
+const sctk_ssize_t SCTK_ALLOC_FREE_SIZES[SCTK_ALLOC_NB_FREE_LIST] = {
 	32,    64,   96,  128,  160,   192,   224,   256,    288,    320,
 	352,  384,  416,  448,  480,   512,   544,   576,    608,    640,
 	672,  704,  736,  768,  800,   832,   864,   896,    928,    960,
@@ -104,7 +92,7 @@ const sctk_size_t SCTK_ALLOC_FREE_SIZES[SCTK_ALLOC_NB_FREE_LIST] = {
 	524288, 1048576, SCTK_MACRO_BLOC_SIZE, -1, -1, -1, -1, -1
 };
 /** Define the size classes used for the free list of default memory source. **/
-const sctk_size_t SCTK_ALLOC_MMS_FREE_SIZES[SCTK_ALLOC_NB_FREE_LIST] = {
+const sctk_ssize_t SCTK_ALLOC_MMS_FREE_SIZES[SCTK_ALLOC_NB_FREE_LIST] = {
 	     1*SCTK_MACRO_BLOC_SIZE,     2*SCTK_MACRO_BLOC_SIZE,     4*SCTK_MACRO_BLOC_SIZE,
 	     8*SCTK_MACRO_BLOC_SIZE,    16*SCTK_MACRO_BLOC_SIZE,    32*SCTK_MACRO_BLOC_SIZE,
 	    64*SCTK_MACRO_BLOC_SIZE,   128*SCTK_MACRO_BLOC_SIZE,   256*SCTK_MACRO_BLOC_SIZE,
@@ -215,7 +203,7 @@ sctk_size_t sctk_alloc_calc_chunk_size(sctk_size_t user_size) {
 **/
 void sctk_alloc_thread_pool_init(
     struct sctk_thread_pool *pool,
-    const sctk_size_t alloc_free_sizes[SCTK_ALLOC_NB_FREE_LIST]) {
+    const sctk_ssize_t alloc_free_sizes[SCTK_ALLOC_NB_FREE_LIST]) {
   int i;
 
   // default value
@@ -300,7 +288,7 @@ int sctk_alloc_optimized_log2_size_t(sctk_size_t value)
  * @param size_list Define the list this is only to check in debug mode.
 **/
 int sctk_alloc_reverse_analytic_free_size(sctk_size_t size,
-                                          const sctk_size_t *size_list) {
+                                          const sctk_ssize_t *size_list) {
   // errors
   assert(size_list == SCTK_ALLOC_FREE_SIZES);
   assert(64 >> 5 == 2);
@@ -327,12 +315,12 @@ int sctk_alloc_reverse_analytic_free_size(sctk_size_t size,
  * header comprised. For blocs larger than a macro bloc, it will return NULL.
 **/
 sctk_alloc_free_list_t *
-sctk_alloc_get_free_list_slow(struct sctk_thread_pool *pool, sctk_size_t size) {
+sctk_alloc_get_free_list_slow(struct sctk_thread_pool *pool, sctk_ssize_t size) {
   /** @TODO maybe this can be optimized by using uin32_t, only ok if refuse
    * usage of old memory source as it manage segment of large size. **/
   sctk_size_t seg_size = pool->nb_free_lists;
   sctk_size_t i = seg_size >> 1;
-  const sctk_size_t *ptr = pool->alloc_free_sizes;
+  const sctk_ssize_t *ptr = pool->alloc_free_sizes;
   // int j = 0;
 
   // errors
@@ -377,9 +365,9 @@ sctk_alloc_get_free_list_slow(struct sctk_thread_pool *pool, sctk_size_t size) {
  * header comprised. For blocs larger than a macro bloc, it will return NULL.
 **/
 sctk_alloc_free_list_t *
-sctk_alloc_get_free_list_fast(struct sctk_thread_pool *pool, sctk_size_t size) {
+sctk_alloc_get_free_list_fast(struct sctk_thread_pool *pool, sctk_ssize_t size) {
   // vars
-  const sctk_size_t *size_list = pool->alloc_free_sizes;
+  const sctk_ssize_t *size_list = pool->alloc_free_sizes;
   int pos;
 
   // errors
@@ -488,7 +476,7 @@ void sctk_alloc_free_list_insert(
     enum sctk_alloc_insert_mode insert_mode) {
   struct sctk_alloc_free_chunk *flist;
   struct sctk_alloc_free_chunk *fchunk;
-  sctk_size_t list_class;
+  sctk_ssize_t list_class;
 
   // errors
   assert(pool != NULL);
@@ -582,7 +570,7 @@ void sctk_alloc_free_list_remove(struct sctk_thread_pool *pool,
  */
 struct sctk_alloc_free_chunk *
 sctk_alloc_find_adapted_free_chunk(sctk_alloc_free_list_t *list,
-                                   sctk_size_t size) {
+                                   sctk_ssize_t size) {
   struct sctk_alloc_free_chunk *fchunk;
 
   // error
@@ -923,7 +911,7 @@ void sctk_alloc_free_chunk_range(struct sctk_thread_pool *pool,
 sctk_alloc_vchunk sctk_alloc_merge_chunk(struct sctk_thread_pool *pool,
                                          sctk_alloc_vchunk chunk,
                                          sctk_alloc_vchunk first_page_chunk,
-                                         sctk_addr_t max_address) {
+                                         __AL_UNUSED__ sctk_addr_t max_address) {
   sctk_alloc_vchunk cur = chunk;
   sctk_alloc_vchunk last;
   sctk_size_t size;
@@ -1408,12 +1396,19 @@ bool sctk_alloc_chain_refill_mem(struct sctk_alloc_chain *chain,
  * @param chain Define the allocation chain in which to request memory.
  * @param size Define the expected size of the segment (can be larger).
 **/
+
+#pragma weak sctk_net_memory_allocation_hook
+sctk_size_t sctk_net_memory_allocation_hook(size_t size)
+{
+        return 0;
+}
+
 SCTK_PUBLIC void * sctk_alloc_chain_alloc(struct sctk_alloc_chain * chain,sctk_size_t size)
 {
-  sctk_size_t boundary = 0;
-#ifdef MPC_Message_Passing
-  boundary = sctk_net_memory_allocation_hook (size);
-#endif
+        sctk_size_t boundary = 0;
+
+        boundary = sctk_net_memory_allocation_hook (size);
+
 	return sctk_alloc_chain_alloc_align(chain,boundary,size);
 }
 
@@ -1480,7 +1475,7 @@ SCTK_PUBLIC void * sctk_alloc_chain_alloc_align(struct sctk_alloc_chain * chain,
 
 		//temporaty check non support of small blocs
 		if (chunk != NULL)
-			assume_m(sctk_alloc_get_chunk_header_large_size(&chunk->header) >= 32lu,"Small blocs are not supported for now, so it's imposible to get such a small size here.");
+			assume_m(sctk_alloc_get_chunk_header_large_size(&chunk->header) >= 32l,"Small blocs are not supported for now, so it's imposible to get such a small size here.");
 
 		//error
 		if (chunk == NULL)
@@ -1581,7 +1576,7 @@ SCTK_PUBLIC void sctk_alloc_chain_free(struct sctk_alloc_chain * chain,void * pt
 	sctk_alloc_vchunk vchunk;
 	sctk_alloc_vchunk vfirst = NULL;
 	bool insert_bloc = true;
-	sctk_size_t old_size;
+	__AL_UNUSED__ sctk_size_t old_size;
 
 	//error
 	assume_m(chain != NULL, "Can't free the memory without an allocation chain.");
@@ -1946,7 +1941,7 @@ void sctk_alloc_mm_source_default_init(struct sctk_alloc_mm_source_default* sour
 **/
 struct sctk_alloc_macro_bloc *
 sctk_alloc_mm_source_default_request_memory(struct sctk_alloc_mm_source *source,
-                                            sctk_size_t size) {
+                                            sctk_ssize_t size) {
   // vars
   struct sctk_alloc_mm_source_default *source_default =
       (struct sctk_alloc_mm_source_default *)source;
@@ -1954,7 +1949,7 @@ sctk_alloc_mm_source_default_request_memory(struct sctk_alloc_mm_source *source,
   struct sctk_alloc_macro_bloc *macro_bloc;
   enum sctk_alloc_mapping_state mapping;
   void *tmp = NULL;
-  sctk_size_t aligned_size = size;
+  sctk_ssize_t aligned_size = size;
   sctk_alloc_vchunk vchunk;
   sctk_alloc_vchunk residut;
 
@@ -2164,7 +2159,7 @@ void sctk_alloc_perror (const char * format,...)
 	va_start (param, format);
 	sctk_alloc_vsprintf (tmp2,4096, tmp, param);
 	va_end (param);
-	sctk_safe_write(STDERR_FILENO,tmp2,strlen(tmp2));
+	mpc_common_io_safe_write(STDERR_FILENO,tmp2,strlen(tmp2));
 }
 
 /************************* FUNCTION ************************/
@@ -2180,7 +2175,7 @@ void sctk_alloc_pwarning (const char * format,...)
 	va_start (param, format);
 	sctk_alloc_vsprintf (tmp2,4096, tmp, param);
 	va_end (param);
-	sctk_safe_write(STDERR_FILENO,tmp2,(unsigned int)strlen(tmp2));
+	mpc_common_io_safe_write(STDERR_FILENO,tmp2,(unsigned int)strlen(tmp2));
 }
 
 /************************* FUNCTION ************************/
@@ -2266,7 +2261,6 @@ SCTK_PUBLIC struct sctk_alloc_region_entry * sctk_alloc_region_get_entry(void* a
 	id = (((sctk_addr_t)addr)%SCTK_REGION_SIZE) / SCTK_MACRO_BLOC_SIZE;
 
 	assert(id < SCTK_REGION_HEADER_ENTRIES);
-	assert(id >= 0);
 
 	return region->entries+id;
 }
@@ -2762,7 +2756,7 @@ SCTK_PUBLIC void sctk_alloc_chain_print_stat(struct sctk_alloc_chain * chain)
 	//read stat
 	sctk_alloc_chain_get_numa_stat(&numa_stat,chain);
 	sctk_alloc_chain_get_stat(&chain_stat,chain);
-	numa_nodes = sctk_get_numa_node_number();
+	numa_nodes = mpc_topology_get_numa_node_count();
 
 	//print it
 	printf("====================== ALLOCATION CHAIN STAT ======================\n");
@@ -2816,7 +2810,7 @@ SCTK_PUBLIC int sctk_alloc_chain_get_numa_node(struct sctk_alloc_chain * chain)
  * @param new_mm_source Define the new memory source to link to this allocation chain you can use
  * SCTK_ALLOC_KEEP_OLD_MM_SOURCE.
 **/
-SCTK_PUBLIC void sctk_alloc_chain_numa_migrate(struct sctk_alloc_chain * chain, int target_numa_node,bool migrate_chain_struct,bool migrate_content,struct sctk_alloc_mm_source * new_mm_source)
+SCTK_PUBLIC void sctk_alloc_chain_numa_migrate(struct sctk_alloc_chain * chain, int target_numa_node,bool migrate_chain_struct, __AL_UNUSED__ bool migrate_content,struct sctk_alloc_mm_source * new_mm_source)
 {
 	//errors
 	assert(chain != NULL);

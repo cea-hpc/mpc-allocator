@@ -26,11 +26,6 @@
 /************************** HEADERS ************************/
 #include "sctk_alloc_common.h"
 
-//select the config header (with or without MPC)
-#ifdef MPC_Common
-#include "sctk_runtime_config.h"
-#else //MPC_Common
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -64,12 +59,9 @@ struct sctk_runtime_config_struct_allocator
 	bool numa_round_robin;
 	int mm_sources;
 };
-#endif //MPC_Common
 
-/************************* GLOBALS *************************/
-#ifndef MPC_Common
+
 extern struct sctk_runtime_config_struct_allocator sctk_alloc_global_config;
-#endif //MPC_Common
 
 /************************* FUNCTION ************************/
 /**
@@ -78,11 +70,7 @@ extern struct sctk_runtime_config_struct_allocator sctk_alloc_global_config;
 **/
 static __inline__ const struct sctk_runtime_config_struct_allocator * sctk_alloc_config(void)
 {
-	#ifdef MPC_Common
-	return &sctk_runtime_config_get_nocheck()->modules.allocator;
-	#else //MPC_Common
 	return &sctk_alloc_global_config;
-	#endif //MPC_Common
 }
 
 /************************* FUNCTION ************************/
@@ -92,7 +80,7 @@ void sctk_alloc_config_init_static_defaults(
     struct sctk_runtime_config_struct_allocator *config);
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif //SCTK_ALLOC_CONFIG_H

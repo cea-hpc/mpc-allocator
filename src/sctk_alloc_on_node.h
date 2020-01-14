@@ -37,7 +37,7 @@ SCTK_PUBLIC void * sctk_malloc_on_node (size_t size, int node);
 
 /************************* FUNCTION ************************/
 //internal functions
-SCTK_INTERN void sctk_malloc_on_node_init(int numa_nodes);
+void sctk_malloc_on_node_init(int numa_nodes);
 void *sctk_malloc_on_node_uma(size_t size, int node);
 void sctk_malloc_on_node_reset(void);
 

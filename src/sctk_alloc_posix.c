@@ -21,7 +21,6 @@
 /* #                                                                      # */
 /* ######################################################################## */
 
-#if defined(MPC_PosixAllocator) || !defined(MPC_Common)
 
 /************************** HEADERS ************************/
 #if defined(_WIN32)
@@ -51,15 +50,11 @@
 	#include "sctk_alloc_topology.h"
 #endif
 
-//optional header
-#ifdef MPC_Common
-#include "sctk.h"
-#endif
 
 //if have NUMA support
 #ifdef HAVE_HWLOC
 	#include <hwloc.h>
-	// #include "../../../install/include/mpcmp.h"
+	// #include "../../../install/include/messaging.h"
 	/** Select the NUMA memory source init function. **/
 	#define sctk_alloc_posix_mmsrc_init sctk_alloc_posix_mmsrc_numa_init
 #else //HAVE_HWLOC
@@ -96,31 +91,31 @@ static struct sctk_alloc_chain sctk_global_egg_chain;
 /************************* FUNCTION ************************/
 #ifdef MPC_check_compatibility
 /** Defined in MPC **/
-int sctk_get_cpu();
+int mpc_topology_get_current_cpu();
 /** Defined in MPC **/
-int sctk_get_node_from_cpu (int cpu);
+int mpc_topology_get_numa_node_from_cpu (int cpu);
 #endif
 
 /*************************** FUNCTION **********************/
-SCTK_PUBLIC void * sctk_malloc_hook(size_t size,const void * caller)
+SCTK_PUBLIC void * sctk_malloc_hook(size_t size,__AL_UNUSED__ const void * caller)
 {
 	return sctk_malloc(size);
 }
 
 /*************************** FUNCTION **********************/
-SCTK_PUBLIC void sctk_free_hook(void * ptr, const void * caller)
+SCTK_PUBLIC void sctk_free_hook(void * ptr, __AL_UNUSED__ const void * caller)
 {
 	sctk_free(ptr);
 }
 
 /*************************** FUNCTION **********************/
-SCTK_PUBLIC void * sctk_realloc_hook(void * ptr,size_t size,const void * caller)
+SCTK_PUBLIC void * sctk_realloc_hook(void * ptr,size_t size,__AL_UNUSED__ const void * caller)
 {
 	return sctk_realloc(ptr,size);
 }
 
 /*************************** FUNCTION **********************/
-SCTK_PUBLIC void * sctk_memalign_hook(size_t align,size_t size,const void * caller)
+SCTK_PUBLIC void * sctk_memalign_hook(size_t align,size_t size,__AL_UNUSED__ const void * caller)
 {
 	return sctk_memalign(align,size);
 }
@@ -260,7 +255,7 @@ SCTK_INTERN void sctk_alloc_posix_mmsrc_numa_init_phase_numa(void)
 
 	//get number of nodes
 	SCTK_NO_PDEBUG("Init numa nodes");
-	nodes = sctk_get_numa_node_number();
+	nodes = mpc_topology_get_numa_node_count();
 	assume_m(nodes <= SCTK_MAX_NUMA_NODE,"Caution, you get more node than supported by allocator. Limit is setup by SCTK_MAX_NUMA_NODE macro in sctk_alloc_posix.c.");
 
 	//debug
@@ -277,7 +272,7 @@ SCTK_INTERN void sctk_alloc_posix_mmsrc_numa_init_phase_numa(void)
 	}
 
 	//setup malloc on node
-	sctk_malloc_on_node_init(sctk_get_numa_node_number());
+	sctk_malloc_on_node_init(mpc_topology_get_numa_node_count());
 	#endif
 
 	//mark NUMA init phase as done.
@@ -312,7 +307,7 @@ int sctk_alloc_posix_source_round_robin(void) {
 
   sctk_alloc_spinlock_lock(&lock);
   res = cnt;
-  cnt = (cnt + 1) % sctk_get_numa_node_number();
+  cnt = (cnt + 1) % mpc_topology_get_numa_node_count();
   sctk_alloc_spinlock_unlock(&lock);
   return res;
 }
@@ -344,12 +339,12 @@ sctk_alloc_posix_get_local_mm_source(int force_default_numa_mm_source) {
   int node = 0;
 #endif
 
-#if !defined(MPC_Common) && defined(HAVE_HWLOC)
+#if defined(HAVE_HWLOC)
   // use round robin on NUMA source if required, only out of MPC
   if ((node == -1 || SCTK_DEFAULT_NUMA_MM_SOURCE_ID) &&
       sctk_alloc_config()->numa_round_robin)
     node = sctk_alloc_posix_source_round_robin();
-#endif // !defined(MPC_Common) && defined HAVE_HWLOC
+#endif // defined HAVE_HWLOC
 
   // check res
   if (node == -1)
@@ -446,20 +441,20 @@ SCTK_INTERN void sctk_alloc_posix_base_init(void)
 
 		//init topology system if have NUMA
 		//on MPC it will be done latter after entering in MPC main()
-		#ifndef MPC_Common
+
 		#ifdef HAVE_HWLOC
 		sctk_alloc_init_topology();
 		#endif
-		#endif
+
 
 		//init global memory source
 		sctk_alloc_posix_mmsrc_init();
 
 		//Now can load the user config values as we get egg_allocator to parse the file
 		//like for phase_nunma we delay it in MPC to be done in main function, not before.
-		#ifndef MPC_Common
+
 		sctk_alloc_config_init();
-		#endif //MPC_Common
+
 
 		//can bind the memory source in egg allocator
 		sctk_global_egg_chain.source = &sctk_global_memory_source[SCTK_DEFAULT_NUMA_MM_SOURCE_ID]->source;
@@ -469,9 +464,9 @@ SCTK_INTERN void sctk_alloc_posix_base_init(void)
 
 		//if standelone, init NUMA now, in MPC it will be called later after init of hwloc and
 		//restriction of nodeset.
-		#ifndef MPC_Common
+
 		sctk_alloc_posix_mmsrc_numa_init_phase_numa();
-		#endif //MPC_Common
+
 
 		//unmark egg_allocator from currant allocator
 		sctk_set_tls_chain(NULL);
@@ -943,7 +938,7 @@ SCTK_INTERN void sctk_alloc_posix_numa_migrate_chain(struct sctk_alloc_chain * c
 	SCTK_PROFIL_START(sctk_alloc_posix_numa_migrate);
 
 	#ifdef MPC_Theads
-	SCTK_NO_PDEBUG("Migration on %d",sctk_get_cpu());
+	SCTK_NO_PDEBUG("Migration on %d",mpc_topology_get_current_cpu());
 	#endif
 
 	//if NULL nothing to do otherwise remind the current mm source
@@ -1011,5 +1006,3 @@ SCTK_INTERN void sctk_alloc_posix_mark_current_for_destroy(void)
 	//mark the current chain for destroy
 	sctk_alloc_chain_mark_for_destroy(local_chain,sctk_alloc_posix_destroy_handler);
 }
-
-#endif //define(MPC_PosixAllocator) || !defined(MPC_Common)

@@ -242,7 +242,7 @@ void sctk_alloc_force_segment_binding(
     struct sctk_alloc_mm_source_light *light_source, void *base,
     sctk_size_t size) {
   // vars
-  int res;
+
 
   // errors
   assert(base != NULL);
@@ -253,7 +253,7 @@ void sctk_alloc_force_segment_binding(
   // use hwloc to bind the segment
   // 0 on HWLOC_MEMBIND_THREAD for windows
   if (light_source->nodeset != NULL)
-    res = hwloc_set_area_membind_nodeset(sctk_get_topology_object(), base, size,
+    hwloc_set_area_membind_nodeset(mpc_topology_get(), base, size,
                                          light_source->nodeset,
                                          HWLOC_MEMBIND_BIND, 0);
 }
@@ -425,7 +425,7 @@ struct sctk_alloc_macro_bloc *sctk_alloc_mm_source_light_find_in_cache(
 **/
 struct sctk_alloc_macro_bloc *
 sctk_alloc_mm_source_light_request_memory(struct sctk_alloc_mm_source *source,
-                                          sctk_size_t size) {
+                                          sctk_ssize_t size) {
   // vars
   struct sctk_alloc_mm_source_light *light_source =
       (struct sctk_alloc_mm_source_light *)source;
@@ -508,6 +508,14 @@ void sctk_net_memory_free_hook ( void * ptr , size_t size );
  * Free a macro bloc comming from the allocator. Depending on a threashold, the memory is returned to the system or
  * kept for a future reuse.
 **/
+
+#pragma weak sctk_net_memory_free_hook
+void sctk_net_memory_free_hook ( void * ptr , size_t size )
+{
+
+}
+
+
 void sctk_alloc_mm_source_light_free_memory(
     struct sctk_alloc_mm_source *source, struct sctk_alloc_macro_bloc *bloc) {
   // vars
@@ -531,9 +539,7 @@ void sctk_alloc_mm_source_light_free_memory(
     SCTK_NO_PDEBUG("LMMSRC %p : Do munmap %p -> %llu", source, free_bloc,
                    free_bloc->size);
 
-#ifdef MPC_Message_Passing
-		sctk_net_memory_free_hook ( free_bloc , free_bloc->size );
-#endif
+		sctk_net_memory_free_hook ( (void*)free_bloc , free_bloc->size );
 
 		sctk_munmap(free_bloc,free_bloc->size);
 	}
