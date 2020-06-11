@@ -1396,11 +1396,20 @@ bool sctk_alloc_chain_refill_mem(struct sctk_alloc_chain *chain,
  * @param chain Define the allocation chain in which to request memory.
  * @param size Define the expected size of the segment (can be larger).
 **/
+sctk_size_t (*___sctk_net_memory_allocation_hook)(size_t size) = NULL;
 
-#pragma weak sctk_net_memory_allocation_hook
+
 sctk_size_t sctk_net_memory_allocation_hook(size_t size)
 {
-        return 0;
+	if(___sctk_net_memory_allocation_hook != NULL)
+	{
+		___sctk_net_memory_allocation_hook(size);
+	}
+}
+
+void sctk_net_memory_allocation_hook_register(sctk_size_t (*allocation_hook)(size_t size))
+{
+	___sctk_net_memory_allocation_hook = allocation_hook;
 }
 
 SCTK_PUBLIC void * sctk_alloc_chain_alloc(struct sctk_alloc_chain * chain,sctk_size_t size)
