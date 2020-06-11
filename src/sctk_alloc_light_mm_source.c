@@ -501,18 +501,24 @@ struct sctk_alloc_macro_bloc *sctk_alloc_mm_source_light_mmap_new_segment(
   return macro_bloc;
 }
 
-void sctk_net_memory_free_hook ( void * ptr , size_t size );
+void (*___sctk_net_memory_free_hook) ( void * ptr , size_t size ) = NULL;
 
 /************************* FUNCTION ************************/
 /**
  * Free a macro bloc comming from the allocator. Depending on a threashold, the memory is returned to the system or
  * kept for a future reuse.
 **/
-
-#pragma weak sctk_net_memory_free_hook
 void sctk_net_memory_free_hook ( void * ptr , size_t size )
 {
+	if(___sctk_net_memory_free_hook != NULL)
+	{
+		(___sctk_net_memory_free_hook)(ptr, size);
+	}
+}
 
+void sctk_net_memory_free_hook_register(void (*free_hook) ( void * ptr , size_t size ))
+{
+	___sctk_net_memory_free_hook = free_hook;
 }
 
 

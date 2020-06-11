@@ -64,6 +64,7 @@ SCTK_PUBLIC void * sctk_memalign(size_t boundary,size_t size);
 SCTK_INTERN struct sctk_alloc_chain * sctk_get_current_alloc_chain(void);
 void *sctk_realloc_inter_chain(void *ptr, size_t size);
 void sctk_alloc_tls_chain();
+void sctk_net_memory_free_hook_register(void (*free_hook) ( void * ptr , size_t size ));
 
 /************************* FUNCTION ************************/
 SCTK_PUBLIC void sctk_alloc_posix_chain_print_stat(void);
