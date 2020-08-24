@@ -65,7 +65,7 @@ SCTK_INTERN int mpcalloc_topology_has_numa_nodes (void)
 	if (res == -1)
   {
 #if (HWLOC_API_VERSION < 0x00020000)
-	  res hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NODE ) != 0;
+	  res = hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NODE ) != 0;
 #else
     res = hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NUMANODE ) != 0;
 #endif
