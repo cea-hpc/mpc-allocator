@@ -27,50 +27,150 @@
 
 typedef size_t sctk_alloc_buffer_t;
 
-struct sctk_alloc_chain * __sctk_create_thread_memory_area(void);
-void sctk_set_tls(struct sctk_alloc_chain * tls);
+struct sctk_alloc_chain *__sctk_create_thread_memory_area(void);
+void sctk_set_tls(struct sctk_alloc_chain *tls);
 
-static inline void sctk_buffered_alloc_create ( sctk_alloc_buffer_t * buf,  size_t elemsize){*buf = elemsize;};
-static inline void sctk_buffered_alloc_delete ( sctk_alloc_buffer_t * buf) {};
-static inline void sctk_buffered_free ( void *ptr) {free(ptr);};
-static inline void * sctk_buffered_malloc ( sctk_alloc_buffer_t * buf, size_t size) {return malloc(size);};
-void * sctk_get_heap_start(void);
-size_t sctk_get_heap_size(void);
-void * __sctk_malloc_new(size_t size,struct sctk_alloc_chain * chain);
-void * __sctk_malloc (size_t size,struct sctk_alloc_chain * chain);
-char * sctk_alloc_mode (void);
-void __sctk_free(void * ptr,struct sctk_alloc_chain * chain);
-static inline void sctk_delete_thread_memory_area( struct sctk_alloc_chain * chain) {};
-static inline void __sctk_set_tls ( struct sctk_alloc_chain * tls) {
-  /*sctk_get_set_tls_init ();
-  SCTK_DEBUG (sctk_mem_error ("Set tls %p\n", tls));
-  sctk_set_tls_from_thread (tls);*/
+static inline void sctk_buffered_alloc_create(sctk_alloc_buffer_t *buf, size_t elemsize)
+{
+	*buf = elemsize;
 }
-static inline void sctk_enter_no_alloc_land(void) {};
-static inline void sctk_leave_no_alloc_land(void) {};
-static inline void __sctk_delete_thread_memory_area( struct sctk_alloc_chain * tls) {};
-void * sctk_user_mmap (void *start, size_t length, int prot, int flags,int fd, off_t offset);
-static inline void sctk_init_alloc(void) {sctk_alloc_posix_base_init();};
 
+static inline void sctk_buffered_alloc_delete(sctk_alloc_buffer_t *buf)
+{
+	(void)(buf);
+}
+
+static inline void sctk_buffered_free(void *ptr)
+{
+	free(ptr);
+}
+
+static inline void *sctk_buffered_malloc(sctk_alloc_buffer_t *buf, size_t size)
+{
+	return malloc(size); (void)(buf);
+}
+
+void *sctk_get_heap_start(void);
+size_t sctk_get_heap_size(void);
+void *__sctk_malloc_new(size_t size, struct sctk_alloc_chain *chain);
+void *__sctk_malloc(size_t size, struct sctk_alloc_chain *chain);
+char *sctk_alloc_mode(void);
+void __sctk_free(void *ptr, struct sctk_alloc_chain *chain);
+
+static inline void sctk_delete_thread_memory_area(struct sctk_alloc_chain *chain)
+{
+	(void)(chain);
+}
+
+static inline void __sctk_set_tls(struct sctk_alloc_chain *tls)
+{
+	/*sctk_get_set_tls_init ();
+	 * SCTK_DEBUG (sctk_mem_error ("Set tls %p\n", tls));
+	 * sctk_set_tls_from_thread (tls);*/
+	(void)(tls);
+}
+
+static inline void sctk_enter_no_alloc_land(void)
+{
+}
+
+static inline void sctk_leave_no_alloc_land(void)
+{
+}
+
+static inline void __sctk_delete_thread_memory_area(struct sctk_alloc_chain *tls)
+{
+	(void)(tls);
+}
+
+void *sctk_user_mmap(void *start, size_t length, int prot, int flags, int fd, off_t offset);
+
+static inline void sctk_init_alloc(void)
+{
+	sctk_alloc_posix_base_init();
+}
 
 /*******************************************/
 /*************** dump_*alloc ***************/
 /*******************************************/
-static inline int sctk_check_file ( char *name) {return 0;};
-static inline void __sctk_dump_tls ( struct sctk_alloc_chain * tls,  char *file_name) {};
-static inline void sctk_dump_tls ( char *file_name) {};
-static inline void __sctk_restore_tls ( struct sctk_alloc_chain ** tls,  char *file_name) {};
-static inline void sctk_restore_tls ( char *file_name) {};
-static inline void __sctk_view_local_memory ( struct sctk_alloc_chain * tls) {};
-static inline void sctk_view_local_memory (void) {};
-static inline void sctk_mem_reset_heap ( sctk_size_t start,  sctk_size_t max_size) {};
-static inline void __sctk_update_memory ( char *file_name) {};
+static inline int sctk_check_file(char *name)
+{
+	(void)(name); return 0;
+}
 
-static inline void sctk_update_used_pages ( int fd,  void **user_data, sctk_size_t * user_data_size,  struct sctk_alloc_chain ** tls) {};
-static inline void sctk_add_global_var ( void *adr,  sctk_size_t size) {};
-static inline void sctk_restore_used_pages ( int fd,  void **user_data, sctk_size_t * user_data_size,  struct sctk_alloc_chain ** tls) {};
-static inline int sctk_check_used_pages ( int fd) {return 0;};
-static inline void sctk_dump_used_pages ( int fd,  void *user_data,  sctk_size_t user_data_size) {};
-static inline void sctk_dump_memory_heap () {};
+static inline void __sctk_dump_tls(struct sctk_alloc_chain *tls, char *file_name)
+{
+	(void)(tls); (void)(file_name);
+}
+
+static inline void sctk_dump_tls(char *file_name)
+{
+	(void)(file_name);
+}
+
+static inline void __sctk_restore_tls(struct sctk_alloc_chain **tls, char *file_name)
+{
+	(void)(tls); (void)(file_name);
+}
+
+static inline void sctk_restore_tls(char *file_name)
+{
+	(void)(file_name);
+}
+
+static inline void __sctk_view_local_memory(struct sctk_alloc_chain *tls)
+{
+	(void)(tls);
+}
+
+static inline void sctk_view_local_memory(void)
+{
+}
+
+static inline void sctk_mem_reset_heap(sctk_size_t start, sctk_size_t max_size)
+{
+	(void)(start); (void)(max_size);
+}
+
+static inline void __sctk_update_memory(char *file_name)
+{
+	(void)(file_name);
+}
+
+static inline void sctk_update_used_pages(int fd, void **user_data, sctk_size_t *user_data_size, struct sctk_alloc_chain **tls)
+{
+	(void)(fd); (void)(user_data); (void)(user_data_size); (void)(tls);
+}
+
+static inline void sctk_add_global_var(void *adr, sctk_size_t size)
+{
+  (void)(adr);
+  (void)(size);
+}
+
+static inline void sctk_restore_used_pages(int fd, void **user_data, sctk_size_t *user_data_size, struct sctk_alloc_chain **tls)
+{
+  (void)(fd);
+  (void)(user_data);
+  (void)(user_data_size);
+  (void)(tls);
+}
+
+static inline int sctk_check_used_pages(int fd)
+{
+  (void)(fd);
+	return 0;
+}
+
+static inline void sctk_dump_used_pages(int fd, void *user_data, sctk_size_t user_data_size)
+{
+  (void)(fd);
+  (void)(user_data);
+  (void)(user_data_size);
+}
+
+static inline void sctk_dump_memory_heap()
+{
+}
 
 #endif
