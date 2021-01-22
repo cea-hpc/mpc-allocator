@@ -4,6 +4,6 @@ includedir=${prefix}/include
 
 Name: mpcalloc
 Description: A thread-aware and NUMA-aware memory allocator
-Version: 0.1
+Version: 0.2
 Libs: -L${libdir} -lmpcalloc
 Cflags: -I${includedir} -I${includedir}/mpcalloc/

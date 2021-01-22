@@ -63,8 +63,15 @@ SCTK_INTERN int mpcalloc_topology_has_numa_nodes (void)
 	//avoid to request multiple times as it will not change
 	static int res = -1;
 	if (res == -1)
-		res = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE) != 0;
+  {
+#if (HWLOC_API_VERSION < 0x00020000)
+	  res = hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NODE ) != 0;
+#else
+    res = hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NUMANODE ) != 0;
+#endif
+  }
 	return res;
+
 	#else
 	return 0;
 	#endif
@@ -78,8 +85,15 @@ SCTK_INTERN int mpcalloc_topology_get_numa_node_count ()
 	//avoid to request multiple times as it will not change
 	static int res = -1;
 	if (res == -1)
-		res = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NODE) ;
+  {
+#if (HWLOC_API_VERSION < 0x00020000)
+	  res = hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NODE );
+#else
+    res = hwloc_get_nbobjs_by_type( topology, HWLOC_OBJ_NUMANODE );
+#endif
+  }
 	return res;
+
 	#else
 	return sctk_alloc_config()->mm_sources;
 	#endif
@@ -93,8 +107,18 @@ SCTK_INTERN int mpcalloc_topology_get_numa_node_from_cpu (const int vp)
 	#ifdef HAVE_HWLOC
 	if(mpcalloc_topology_has_numa_nodes ()){
 		const hwloc_obj_t pu = hwloc_get_obj_by_type(topology, HWLOC_OBJ_PU, vp);
+#if (HWLOC_API_VERSION < 0x00020000)
 		const hwloc_obj_t node = hwloc_get_ancestor_obj_by_type(topology, HWLOC_OBJ_NODE, pu);
 		return node->logical_index;
+#else
+    hwloc_obj_t parent = pu->parent;
+    while (parent && !parent->memory_arity)
+    {
+      parent = parent->parent; /* no memory child, walk up */
+    }
+
+    return parent->logical_index;
+#endif
 	} else {
 		return 0;
 	}
@@ -142,7 +166,11 @@ SCTK_INTERN int sctk_get_preferred_numa_node_no_mpc_numa_binding()
 
 	//nodes
 	// flags = 0 fallback on PROCESS if THREAD is not supported (as for windows).
+#if (HWLOC_API_VERSION < 0x00020000)
 	status =  hwloc_get_membind_nodeset(topology,nodeset,&policy,0);
+#else
+	status =  hwloc_get_membind(topology,nodeset,&policy,HWLOC_MEMBIND_BYNODESET);
+#endif
 	assert(status == 0);
 	if (status == 0)
 		return -1;
@@ -347,6 +375,7 @@ SCTK_INTERN void sctk_alloc_migrate_numa_mem(void * addr,sctk_size_t size,int ta
 
 	//get topo
 	topo = mpcalloc_topology_get();
+#if (HWLOC_API_VERSION < 0x00020000)
 	//get hwloc object for binding
 	obj = hwloc_get_obj_by_type(topo, HWLOC_OBJ_NODE, target_numa_node);
 
@@ -357,6 +386,18 @@ SCTK_INTERN void sctk_alloc_migrate_numa_mem(void * addr,sctk_size_t size,int ta
 	} else {
 		res = hwloc_set_area_membind_nodeset(topo, addr, size, obj->nodeset, HWLOC_MEMBIND_DEFAULT, HWLOC_MEMBIND_THREAD);
 	}
+#else
+	//get hwloc object for binding
+	obj = hwloc_get_obj_by_type(topo, HWLOC_OBJ_NUMANODE, target_numa_node);
+
+	//if -1, then reset to default
+	if (target_numa_node != -1)
+	{
+		res = hwloc_set_area_membind(topo, addr, size, obj->nodeset, HWLOC_MEMBIND_BIND, HWLOC_MEMBIND_THREAD | HWLOC_MEMBIND_MIGRATE|HWLOC_MEMBIND_BYNODESET);
+	} else {
+		res = hwloc_set_area_membind(topo, addr, size, obj->nodeset, HWLOC_MEMBIND_DEFAULT, HWLOC_MEMBIND_THREAD | HWLOC_MEMBIND_BYNODESET);
+	}
+#endif
 
 	//check errors
 	if (res != 0)
