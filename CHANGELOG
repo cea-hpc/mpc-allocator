@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. The format 
 ### Changed
 
 - Move to Hwloc 2+
+- Initialize before main to avoid problems with setlocale
 
 ## [0.1]
 
