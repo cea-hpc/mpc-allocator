@@ -519,6 +519,7 @@ SCTK_INTERN struct sctk_alloc_chain * sctk_alloc_posix_create_new_tls_chain(void
  * Setup the allocation chain for the current thread. It init an allocation chain and point it with
  * the TLS sctk_current_alloc_chain.
 **/
+
 SCTK_INTERN struct sctk_alloc_chain * sctk_alloc_posix_setup_tls_chain(void)
 {
 	//vars
@@ -543,6 +544,18 @@ SCTK_INTERN struct sctk_alloc_chain * sctk_alloc_posix_setup_tls_chain(void)
 	//return it
 	return chain;
 }
+
+/* Ensure Main thread has an allocator before the main */
+void __build_tls_chain(void) __attribute__ ((constructor));
+
+void __build_tls_chain(void)
+{
+	if(sctk_get_tls_chain() == NULL)
+	{
+		sctk_alloc_posix_setup_tls_chain();
+	}
+}
+
 
 /************************* FUNCTION ************************/
 SCTK_PUBLIC void * sctk_calloc (size_t nmemb, size_t size)
