@@ -29,6 +29,10 @@
 	#define __inline__ inline
 #endif
 
+#ifdef __aarch64__
+	#include <sys/time.h>
+#endif
+
 /************************** MACROS *************************/
 // Define rdtscll for x86_64 arch
 #ifdef __x86_64__
@@ -45,6 +49,16 @@
 	#define __sctk_rdtscll(val) { \
 		asm volatile ("rdtsc" : "=A"(val)); \
 		}
+#endif
+
+/************************** MACROS *************************/
+// Define rdtscll for aarch64 arch
+#ifdef __aarch64__ 
+	#define __sctk_rdtscll(val) do { \
+		struct timeval __tp; \
+		gettimeofday(&__tp, NULL); \
+		(val) = __tp.tv_sec * 1e6 + __tp.tv_usec; \
+	} while(0)
 #endif
 
 /************************* FUNCTION ************************/

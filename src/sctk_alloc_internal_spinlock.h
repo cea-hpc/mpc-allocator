@@ -40,6 +40,8 @@ static inline void sctk_alloc_cpu_relax(void)
 {
 	#ifdef __MIC__
 	_mm_delay_32(20);
+        #elif defined(__aarch64__) 
+	__asm__ __volatile__("isb":::"memory");
 	#else
 	__asm__ __volatile__("rep;nop":::"memory");
 	#endif
