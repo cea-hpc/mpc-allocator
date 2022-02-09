@@ -56,6 +56,37 @@ SCTK_INTERN void sctk_alloc_init_topology(void)
 }
 
 /************************* FUNCTION ************************/
+#if (HWLOC_API_VERSION >= 0x00020000)
+SCTK_INTERN int sctk_topology_mcdram_detection(void)
+{
+	static int res = -2;
+	if (res == -2)
+  {
+
+    res = -1;
+  	hwloc_obj_t current = NULL;
+  	hwloc_obj_t prev    = NULL;
+
+  	while( (current = hwloc_get_next_obj_by_type(topology, HWLOC_OBJ_NUMANODE, prev) ) )
+  	{
+  		if(current->subtype != NULL)
+  		{
+  			if(strcmp(current->subtype, "MCDRAM") == 0)
+  			{
+  				SCTK_PTRACE("<Topology> %s Found ! (NUMA NODE #%d)\n", current->subtype, current->logical_index);
+  				res = current->logical_index;
+  			}
+  		}
+  		prev    = current;
+  		current = NULL;
+  	}
+  }
+
+  return res;
+}
+#endif
+
+/************************* FUNCTION ************************/
 
 SCTK_INTERN int mpcalloc_topology_has_numa_nodes (void)
 {
@@ -99,7 +130,6 @@ SCTK_INTERN int mpcalloc_topology_get_numa_node_count ()
 	#endif
 }
 
-
 /************************* FUNCTION ************************/
 
 SCTK_INTERN int mpcalloc_topology_get_numa_node_from_cpu (const int vp)
@@ -126,7 +156,6 @@ SCTK_INTERN int mpcalloc_topology_get_numa_node_from_cpu (const int vp)
 	return 0;
 	#endif
 }
-
 
 /************************* FUNCTION ************************/
 #ifdef HAVE_HWLOC

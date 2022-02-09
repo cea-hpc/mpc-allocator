@@ -49,6 +49,7 @@ static struct sctk_alloc_mm_source_light sctk_global_alloc_on_node_mm_src[SCTK_M
 static bool sctk_global_alloc_on_node_initilized = false;
 #endif //HAVE_HWLOC
 
+
 /************************* FUNCTION ************************/
 /**
  * Global initialisation of the array of allocation chain used for malloc on node.
@@ -168,6 +169,29 @@ void *sctk_malloc_on_node_numa(size_t size, int node) {
   return ptr;
 }
 #endif //HAVE_HWLOC
+
+/************************* FUNCTION ************************/
+/**
+ * Request memory allocation on a MCDRAM memory bank (Intel KNL processor).
+ * @param size Size of the memory bloc to allocate.
+**/
+#ifdef HAVE_HWLOC
+void *sctk_hbw_malloc(size_t size)
+{
+  int mcdram_node = -1;
+  //detection of possible MCDRAM memory bank
+  // HWLOC version >= 2.0 is required to detect memory type
+#if (HWLOC_API_VERSION >= 0x00020000)
+  mcdram_node = sctk_topology_mcdram_detection();
+#endif
+  if(mcdram_node == -1)
+  { // no MCDRAM found, forward allocation to numa bank 0
+    mcdram_node = 0;
+  }
+
+  return sctk_malloc_on_node_numa(size, mcdram_node);
+}
+#endif
 
 /************************* FUNCTION ************************/
 /**
