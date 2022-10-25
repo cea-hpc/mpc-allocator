@@ -45,7 +45,8 @@ void sctk_malloc_on_node_reset(void);
 //optional intern function depend on NUMA status
 #ifdef HAVE_HWLOC
 void *sctk_malloc_on_node_numa(size_t size, int node);
-void *sctk_hbw_malloc(size_t size, int node);
+void *sctk_hbw_malloc(size_t size);
+void sctk_hbw_free(void *ptr);
 struct sctk_alloc_chain *sctk_malloc_on_node_get_chain(int node);
 #endif //HAVE_HWLOC
 

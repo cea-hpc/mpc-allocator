@@ -176,7 +176,7 @@ void *sctk_malloc_on_node_numa(size_t size, int node) {
  * @param size Size of the memory bloc to allocate.
 **/
 #ifdef HAVE_HWLOC
-void *sctk_hbw_malloc(size_t size)
+SCTK_PUBLIC void *sctk_hbw_malloc(size_t size)
 {
   int mcdram_node = -1;
   //detection of possible MCDRAM memory bank
@@ -190,6 +190,11 @@ void *sctk_hbw_malloc(size_t size)
   }
 
   return sctk_malloc_on_node_numa(size, mcdram_node);
+}
+
+SCTK_PUBLIC void sctk_hbw_free(void *ptr)
+{
+  return free(ptr);
 }
 #endif
 
