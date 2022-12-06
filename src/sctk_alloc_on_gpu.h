@@ -20,8 +20,8 @@
 /* #                                                                      # */
 /* ######################################################################## */
 
-#ifndef SCTK_ALLOC_H
-#define SCTK_ALLOC_H
+#ifndef SCTK_ALLOC_ON_GPU_H
+#define SCTK_ALLOC_ON_GPU_H
 
 #ifdef __cplusplus
 extern "C"
@@ -29,32 +29,30 @@ extern "C"
 #endif
 
 /************************** HEADERS ************************/
-#if defined(_WIN32)
-	#include <windows.h>
-	#ifdef _MSC_VER
-		//used for _open and _write functions with VCC
-		#include <io.h>
-	#endif
-#else	
-	#include <sys/mman.h>
-#endif
 #include "sctk_alloc_common.h"
-#include "sctk_alloc_lock.h"
-#include "sctk_alloc_mpscf_queue.h"
+#include <cuda.h>
 
-#include "sctk_alloc_chunk.h"
-#include "sctk_alloc_thread_pool.h"
-#include "sctk_alloc_mmsrc.h"
-#include "sctk_alloc_mmsrc_default.h"
-#include "sctk_alloc_rfq.h"
-#include "sctk_alloc_chain.h"
-#include "sctk_alloc_region.h"
 
-// GPU support
-#include "sctk_alloc_on_gpu.h"
+/************************* FUNCTION ************************/
+//user entry point
+SCTK_PUBLIC void * sctk_malloc_on_gpu (size_t size); // no gpu info, alloc by default or with hwloc info
+
+/************************* FUNCTION ************************/
+//internal functions
+/*void sctk_malloc_on_node_init(int numa_nodes);
+void *sctk_malloc_on_node_uma(size_t size, int node);
+void sctk_malloc_on_node_reset(void);*/
+
+/************************* FUNCTION ************************/
+//optional intern function depend on NUMA status
+/*#ifdef HAVE_HWLOC
+void *sctk_malloc_on_node_numa(size_t size, int node);
+struct sctk_alloc_chain *sctk_malloc_on_node_get_chain(int node);
+#endif //HAVE_HWLOC*/
+
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif //SCTK_ALLOC_H
+#endif //SCTK_ALLOC_ON_GPU_H

@@ -20,41 +20,55 @@
 /* #                                                                      # */
 /* ######################################################################## */
 
-#ifndef SCTK_ALLOC_H
-#define SCTK_ALLOC_H
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 /************************** HEADERS ************************/
-#if defined(_WIN32)
-	#include <windows.h>
-	#ifdef _MSC_VER
-		//used for _open and _write functions with VCC
-		#include <io.h>
-	#endif
-#else	
-	#include <sys/mman.h>
-#endif
-#include "sctk_alloc_common.h"
-#include "sctk_alloc_lock.h"
-#include "sctk_alloc_mpscf_queue.h"
-
-#include "sctk_alloc_chunk.h"
-#include "sctk_alloc_thread_pool.h"
-#include "sctk_alloc_mmsrc.h"
-#include "sctk_alloc_mmsrc_default.h"
-#include "sctk_alloc_rfq.h"
+#include <stdlib.h>
+#include "sctk_alloc_debug.h"
+#include "sctk_alloc_posix.h"
+#include "sctk_alloc_topology.h"
 #include "sctk_alloc_chain.h"
-#include "sctk_alloc_region.h"
+#include "sctk_alloc_light_mm_source.h"
 
-// GPU support
 #include "sctk_alloc_on_gpu.h"
+#include "cuda.h"
 
-#ifdef __cplusplus
+/************************* GLOBALS *************************/
+/*#ifdef HAVE_HWLOC
+/**
+ * We create an allocation chain per node to use sctk_malloc_on_node. At init
+ * we plug them on the related NUMA memory source.
+ * Those chains are shared between all threads.
+**/
+/*static struct sctk_alloc_chain sctk_global_alloc_on_node_chain[SCTK_MAX_NUMA_NODE];
+/**
+ * By default we prefer to use separeted memory source which force the binding, but for future maybe
+ * we can provide some options to use the common once from allocator, but they are less safe as
+ * they didn't force the NUMA bindind.
+**/
+/*static struct sctk_alloc_mm_source_light sctk_global_alloc_on_node_mm_src[SCTK_MAX_NUMA_NODE];
+/**
+
+ * For debug, to check if it was initilized before usage.
+**/
+/*static bool sctk_global_alloc_on_node_initilized = false;
+#endif //HAVE_HWLOC*/
+
+
+/************************* FUNCTION ************************/
+/**
+ * Request memory allocation on a GPU, without specification
+ * @param size Size of the memory bloc to allocate.
+ */
+SCTK_PUBLIC void * sctk_malloc_on_gpu (size_t size)
+{
+    // simple test just for the sake of compilation
+    printf("\n ----> call to sctk malloc on gpu");
+    CUresult err = cuInit(0);
+
+	if (err != CUDA_SUCCESS)
+	    printf("\nERROR %d\n");
+    else
+        printf("\n ---> cuInit SUCCESS !\n");
+
+    /*TODO :  to be continued ... */
 }
-#endif
-
-#endif //SCTK_ALLOC_H

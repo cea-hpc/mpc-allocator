@@ -17,44 +17,70 @@
 /* #                                                                      # */
 /* # Authors:                                                             # */
 /* #   - Valat Sébastien sebastien.valat@cea.fr                           # */
+/* #   - Adam Julien julien.adam@cea.fr                                   # */
 /* #                                                                      # */
 /* ######################################################################## */
 
-#ifndef SCTK_ALLOC_H
-#define SCTK_ALLOC_H
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 /************************** HEADERS ************************/
-#if defined(_WIN32)
-	#include <windows.h>
-	#ifdef _MSC_VER
-		//used for _open and _write functions with VCC
-		#include <io.h>
-	#endif
-#else	
-	#include <sys/mman.h>
-#endif
-#include "sctk_alloc_common.h"
-#include "sctk_alloc_lock.h"
-#include "sctk_alloc_mpscf_queue.h"
+#include <svUnitTest/svUnitTest.h>
+#include <unistd.h>
+#include <cstring>
 
-#include "sctk_alloc_chunk.h"
-#include "sctk_alloc_thread_pool.h"
-#include "sctk_alloc_mmsrc.h"
-#include "sctk_alloc_mmsrc_default.h"
-#include "sctk_alloc_rfq.h"
-#include "sctk_alloc_chain.h"
-#include "sctk_alloc_region.h"
+#include <sctk_allocator.h>
+#include "test_helper.h"
 
-// GPU support
-#include "sctk_alloc_on_gpu.h"
+/************************** USING **************************/
+using namespace svUnitTest;
 
-#ifdef __cplusplus
+/*************************** CLASS *************************/
+class TestAllocateOnGPU : public svutTestCase
+{
+public:
+    void testMethodsRegistration(void);
+    virtual void setUp(void);
+    virtual void tearDown(void);
+protected:
+    void test_somewhere_to_start(void);
+};
+
+/************************* FUNCTION ************************/
+void TestAllocateOnGPU::testMethodsRegistration (void)
+{
+    setTestCaseName("TestAllocateOnGPU");
+    SVUT_REG_TEST_METHOD(test_somewhere_to_start);
 }
+
+/************************* FUNCTION ************************/
+void TestAllocateOnGPU::setUp (void)
+{
+}
+
+/************************* FUNCTION ************************/
+void TestAllocateOnGPU::tearDown (void)
+{
+}
+
+
+/************************* FUNCTION ************************/
+void TestAllocateOnGPU::test_somewhere_to_start(void )
+{
+
+    sctk_malloc_on_gpu(12);
+    SVUT_ASSERT_TODO("todo");
+
+   /* sctk_alloc_chunk_header_large chunk;
+    sctk_addr_t ptr = (sctk_addr_t)&chunk;
+    sctk_addr_t ptrInfo = (sctk_addr_t)sctk_alloc_get_chunk_header_large_info(&chunk);
+
+#ifndef _WIN32
+    sctk_addr_t ptrAddr = (sctk_addr_t)&chunk.addr;
+    SVUT_ASSERT_EQUAL(7u,ptrAddr-ptr);
 #endif
 
-#endif //SCTK_ALLOC_H
+    SVUT_ASSERT_EQUAL(sizeof(sctk_alloc_chunk_header_large)-1,ptrInfo-ptr);*/
+}
+
+
+
+
+SVUT_REGISTER_STANDELONE(TestAllocateOnGPU);

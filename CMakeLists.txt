@@ -48,7 +48,7 @@ mpc_check_stdbool()
 mpc_check_valgrind()
 mpc_check_hwloc()
 mpc_check_openpa()
-
+#TODO_NM CHECK cuda libs and include
 ########################################################################
 #Summary
 message(STATUS "============== SUMMARY ==================")

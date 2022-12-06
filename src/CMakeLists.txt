@@ -11,7 +11,7 @@ endfunction (cm_export_file)
 #################### DEFINE SOURCES #####################
 #Message("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 #if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-	set(alloc_SRC sctk_alloc_debug.c sctk_allocator.c sctk_alloc_posix.c sctk_alloc_topology.c sctk_alloc_light_mm_source.c sctk_alloc_common.c sctk_alloc_numa_stat.c sctk_alloc_on_node.c sctk_alloc_config.c sctk_alloc_hooks.c sctk_alloc_to_recode.c)
+	set(alloc_SRC sctk_alloc_debug.c sctk_allocator.c sctk_alloc_posix.c sctk_alloc_topology.c sctk_alloc_light_mm_source.c sctk_alloc_common.c sctk_alloc_numa_stat.c sctk_alloc_on_node.c sctk_alloc_config.c sctk_alloc_hooks.c sctk_alloc_to_recode.c  sctk_alloc_on_gpu.c)
 #else()
 #	set(alloc_SRC sctk_allocator.c sctk_alloc_posix.c sctk_alloc_topology.c sctk_alloc_light_mm_source.c sctk_alloc_common.c sctk_alloc_numa_stat.c)
 #endif()
@@ -59,7 +59,8 @@ add_library(mpcalloc SHARED ${alloc_SRC})
 add_library(mpcalloc_trace SHARED ${alloc_SRC})
 
 #################### LINK LIBS ##########################
-target_link_libraries(mpcalloc ${HWLOC_LIBRARY} ${INCLUDE_PTHREAD} )
+
+target_link_libraries(mpcalloc ${HWLOC_LIBRARY} ${INCLUDE_PTHREAD})
 if (WIN32)
 target_link_libraries(mpc_allocator ${HWLOC_LIBRARY})
 endif()
