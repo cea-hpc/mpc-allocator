@@ -64,23 +64,8 @@ void TestAllocateOnGPU::tearDown (void)
 /************************* FUNCTION ************************/
 void TestAllocateOnGPU::test_somewhere_to_start(void )
 {
-
     sctk_malloc_on_gpu(12);
-    SVUT_ASSERT_TODO("todo");
-
-   /* sctk_alloc_chunk_header_large chunk;
-    sctk_addr_t ptr = (sctk_addr_t)&chunk;
-    sctk_addr_t ptrInfo = (sctk_addr_t)sctk_alloc_get_chunk_header_large_info(&chunk);
-
-#ifndef _WIN32
-    sctk_addr_t ptrAddr = (sctk_addr_t)&chunk.addr;
-    SVUT_ASSERT_EQUAL(7u,ptrAddr-ptr);
-#endif
-
-    SVUT_ASSERT_EQUAL(sizeof(sctk_alloc_chunk_header_large)-1,ptrInfo-ptr);*/
+    SVUT_ASSERT_TODO("add some checkings");
 }
-
-
-
 
 SVUT_REGISTER_STANDELONE(TestAllocateOnGPU);

@@ -53,6 +53,16 @@
 /*static bool sctk_global_alloc_on_node_initilized = false;
 #endif //HAVE_HWLOC*/
 
+/********************* CHECK CU ERRORS *********************/
+// This will output the proper error strings
+// in the event that a CUDA driver call returns an error
+#define CHECK_ERROR(f) {\
+	CUresult err = f; \
+	if (err != CUDA_SUCCESS) {\
+        fprintf(stderr, "\nERROR : cuda driver API call FAILED !\n\tfile : %s\n\tline : %d\n",__FILE__, __LINE__); \
+    	exit (EXIT_FAILURE);}}
+
+
 
 /************************* FUNCTION ************************/
 /**
@@ -61,14 +71,21 @@
  */
 SCTK_PUBLIC void * sctk_malloc_on_gpu (size_t size)
 {
-    // simple test just for the sake of compilation
-    printf("\n ----> call to sctk malloc on gpu");
-    CUresult err = cuInit(0);
+    // init
+    cuInit(0);
 
-	if (err != CUDA_SUCCESS)
-	    printf("\nERROR %d\n");
-    else
-        printf("\n ---> cuInit SUCCESS !\n");
+    // get first CUDA device
+    CUdevice device;
+    CHECK_ERROR(cuDeviceGet(&device, 0););
 
-    /*TODO :  to be continued ... */
+    // create context
+    CUcontext context;
+    CHECK_ERROR(cuCtxCreate(&context, 0, device));
+
+    // allocate
+    CUdeviceptr ptr;
+    CHECK_ERROR(cuMemAlloc(&ptr, size));
+
+    // return the pointer
+    return (void*)ptr;
 }
