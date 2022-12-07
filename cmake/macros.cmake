@@ -138,6 +138,8 @@ endmacro (print_variable_status)
 #check the presence of svUnitTest
 find_package(svUnitTest)
 
+#check for CUDA
+find_package(CUDAToolkit)
 ########################################################################
 macro(mpc_setup_testing)
 	enable_testing()

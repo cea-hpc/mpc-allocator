@@ -27,20 +27,22 @@ foreach(i ${ALLOC_TEST_LIST})
 	add_test(${i} ${EXECUTOR_PATH} ${i})
 endforeach(i)
 
-add_executable(test_alloc_gpu test_alloc_gpu.cpp)
-target_link_libraries(test_alloc_gpu
-		${UNITTEST_LIBRARY}
-		mpcalloc_primitives_for_test
-		/lib/x86_64-linux-gnu/libcuda.so.1
-		)
-add_test(test_alloc_gpu ${EXECUTOR_PATH} test_alloc_gpu)
+if (CUDAToolkit_FOUND)
+	add_executable(test_alloc_gpu test_alloc_gpu.cpp)
+	target_link_libraries(test_alloc_gpu
+			${UNITTEST_LIBRARY}
+			mpcalloc_primitives_for_test
+			CUDA::cuda_driver)
+	add_test(test_alloc_gpu ${EXECUTOR_PATH} test_alloc_gpu)
+endif ()
 ##################################################################
 #a simple exec with full allocator
 add_executable(simple_malloc simple_malloc-1.cpp)
-target_link_libraries(simple_malloc
-		mpcalloc
-		/lib/x86_64-linux-gnu/libcuda.so.1
-		)
+if (CUDAToolkit_FOUND)
+	target_link_libraries(simple_malloc mpcalloc CUDA::cuda_driver)
+else ()
+	target_link_libraries(simple_malloc mpcalloc)
+endif ()
 
 ##################################################################
 #A small bench of mpscf queues
