@@ -32,6 +32,14 @@ extern "C"
 #include "sctk_alloc_common.h"
 #include <cuda.h>
 
+/********************* CHECK CU ERRORS *********************/
+// This will output the proper error strings
+// in the event that a CUDA driver call returns an error
+#define CHECK_ERROR(f) {\
+	CUresult err = f; \
+	if (err != CUDA_SUCCESS) {\
+        fprintf(stderr, "\nERROR : cuda driver API call FAILED !\n\tfile : %s\n\tline : %d\n",__FILE__, __LINE__); \
+    	exit (EXIT_FAILURE);}}
 
 /************************* FUNCTION ************************/
 //user entry point

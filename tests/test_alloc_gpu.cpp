@@ -40,14 +40,14 @@ public:
     virtual void setUp(void);
     virtual void tearDown(void);
 protected:
-    void test_somewhere_to_start(void);
+    void test_alloc_write_then_read(void);
 };
 
 /************************* FUNCTION ************************/
 void TestAllocateOnGPU::testMethodsRegistration (void)
 {
     setTestCaseName("TestAllocateOnGPU");
-    SVUT_REG_TEST_METHOD(test_somewhere_to_start);
+    SVUT_REG_TEST_METHOD(test_alloc_write_then_read);
 }
 
 /************************* FUNCTION ************************/
@@ -62,10 +62,31 @@ void TestAllocateOnGPU::tearDown (void)
 
 
 /************************* FUNCTION ************************/
-void TestAllocateOnGPU::test_somewhere_to_start(void )
+void TestAllocateOnGPU::test_alloc_write_then_read(void)
 {
-    sctk_malloc_on_gpu(12);
-    SVUT_ASSERT_TODO("add some checkings");
+    // initialize host arrays
+    int N = 100;
+    int a[N];
+    int check_a[N];
+
+    for (int i = 0; i < N; ++i) {
+        a[i] = i;
+        check_a[i] = 0;
+    }
+
+    // allocate on gpu
+    void * d_a = sctk_malloc_on_gpu(N* sizeof(int));
+
+    // WRITE : copy data to device buffer
+    CHECK_ERROR(cuMemcpyHtoD(CUdeviceptr(d_a), a, N * sizeof(int)));
+
+    // READ BACK : copy back into another host buffer
+    CHECK_ERROR(cuMemcpyDtoH(check_a, CUdeviceptr(d_a), N * sizeof(int)));
+
+    // check incoming data
+    for (int i = 0; i < N; ++i) {
+        SVUT_ASSERT_EQUAL(a[i], check_a[i]);
+    }
 }
 
 SVUT_REGISTER_STANDELONE(TestAllocateOnGPU);
