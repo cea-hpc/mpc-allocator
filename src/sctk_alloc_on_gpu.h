@@ -44,6 +44,8 @@ extern "C"
 /************************* FUNCTION ************************/
 //user entry point
 SCTK_PUBLIC void * sctk_malloc_on_gpu (size_t size); // no gpu info, alloc by default or with hwloc info
+SCTK_PUBLIC void * sctk_free_on_gpu (CUdeviceptr ptr);
+
 
 /************************* FUNCTION ************************/
 //internal functions

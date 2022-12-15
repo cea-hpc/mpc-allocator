@@ -41,6 +41,7 @@ public:
     virtual void tearDown(void);
 protected:
     void test_alloc_write_then_read(void);
+    void test_free(void);
 };
 
 /************************* FUNCTION ************************/
@@ -48,6 +49,8 @@ void TestAllocateOnGPU::testMethodsRegistration (void)
 {
     setTestCaseName("TestAllocateOnGPU");
     SVUT_REG_TEST_METHOD(test_alloc_write_then_read);
+    SVUT_REG_TEST_METHOD(test_free);
+
 }
 
 /************************* FUNCTION ************************/
@@ -87,6 +90,17 @@ void TestAllocateOnGPU::test_alloc_write_then_read(void)
     for (int i = 0; i < N; ++i) {
         SVUT_ASSERT_EQUAL(a[i], check_a[i]);
     }
+}
+
+void TestAllocateOnGPU::test_free()
+{
+    // allocate on gpu
+    void * d_a = sctk_malloc_on_gpu(100 * sizeof(int));
+
+    // deallocate
+    d_a = sctk_free_on_gpu (CUdeviceptr(d_a));
+
+    SVUT_ASSERT_EQUAL(d_a, nullptr);
 }
 
 SVUT_REGISTER_STANDELONE(TestAllocateOnGPU);

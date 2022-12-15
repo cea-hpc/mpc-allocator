@@ -79,3 +79,16 @@ SCTK_PUBLIC void * sctk_malloc_on_gpu (size_t size)
     // return the pointer
     return (void*)ptr;
 }
+
+SCTK_PUBLIC void *sctk_free_on_gpu (CUdeviceptr ptr)
+{
+    CUresult res;
+    res = cuMemFree(ptr); //ou &ptr
+    if (res == CUDA_SUCCESS)
+        return NULL;
+    else
+    {
+        fprintf(stderr, "\nERROR : cuda driver API call FAILED !\n\tfile : %s\n\tline : %d\n",__FILE__, __LINE__);
+    	exit (EXIT_FAILURE);
+    }
+}
