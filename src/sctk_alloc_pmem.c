@@ -1,7 +1,15 @@
 #include "sctk_alloc_pmem.h"
 
-SCTK_PUBLIC void* sctk_pmem_create(const char* dir, size_t* size)
+SCTK_PUBLIC sctk_pmem_desc_t* sctk_pmem_create(const char* dir, size_t* size)
 {
+
+  sctk_pmem_desc_t *cur_desc = NULL;
+  cur_desc = (sctk_pmem_desc_t*) malloc(sizeof(sctk_pmem_desc_t));
+  cur_desc->cur_size = 0x0;
+  cur_desc->max_size = 0x0;
+  cur_desc->ptr   = NULL;
+  cur_desc->start = NULL;
+
   SCTK_PMEM_FILE_TYPE type = TYPE_ERROR;
   long int alignment = sysconf(_SC_PAGE_SIZE);
 
@@ -55,25 +63,35 @@ SCTK_PUBLIC void* sctk_pmem_create(const char* dir, size_t* size)
     }
 
     close(fd);
-    return base;
+
+    cur_desc->max_size = *size;
+    cur_desc->ptr = base;
+    cur_desc->start = base;
+
+    return cur_desc;
 
 #else
     fprintf(stderr, "O_TMPFILE is not defined on the system...\n");
-    return -1;
+    return NULL;
 #endif
   }
   else if(type == TYPE_DEVDAX)
   {
     fprintf(stderr, "Error: not supported now...\n");
+    free(cur_desc);
     return NULL;
   }
 
+  free(cur_desc);
   return NULL;
 }
 
-SCTK_PUBLIC int sctk_pmem_destroy(void* base, size_t size)
+SCTK_PUBLIC int sctk_pmem_destroy(sctk_pmem_desc_t* base, size_t size)
 {
-  return munmap(base, size);
+  int ret = munmap(base->start, size);
+  base->ptr = NULL;
+  free(base);
+  return ret;
 }
 
 SCTK_INTERN SCTK_PMEM_FILE_TYPE get_file_type(const char* dir)
@@ -158,4 +176,22 @@ SCTK_INTERN int declare_random_access(int fd, const size_t size)
 SCTK_INTERN int allocate_file_space(int fd, const size_t size)
 {
   return posix_fallocate(fd, 0, size);
+}
+
+
+SCTK_PUBLIC void* sctk_pmem_malloc(sctk_pmem_desc_t* desc, size_t size)
+{
+  void* ret = NULL;
+  if(size + desc->cur_size <= desc->max_size)
+  {
+    desc->cur_size += size;
+    ret = desc->ptr;
+    desc->ptr += size;
+  }
+  return ret;
+}
+
+SCTK_PUBLIC void  sctk_pmem_free(sctk_pmem_desc_t*, size_t size, void* ptr)
+{
+  memset(ptr, 0x0, size);
 }
