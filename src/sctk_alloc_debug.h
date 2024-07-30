@@ -28,11 +28,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//compat with NDEBUG system because using this has consequences in MPC sources.
-#ifdef NDEBUG
-#undef SCTK_ALLOC_DEBUG
+#ifndef NDEBUG
 #define SCTK_ALLOC_DEBUG
-#endif //NDEBUG
+#endif
 
 /************************** MACROS *************************/
 #if defined(SCTK_ALLOC_DEBUG)
