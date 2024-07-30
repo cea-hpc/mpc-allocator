@@ -37,6 +37,7 @@ extern "C"
 
 /************************* FUNCTION ************************/
 
+SCTK_INTERN int sctk_topology_mcdram_detection(void);
 SCTK_INTERN int mpcalloc_topology_has_numa_nodes(void);
 SCTK_INTERN int mpcalloc_topology_get_numa_node_count (void);
 SCTK_INTERN void sctk_alloc_init_topology(void);

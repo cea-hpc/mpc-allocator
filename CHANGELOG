@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog][Keep a Changelog].
 
+## [0.3]
+
+### Added
+
+- Support for Persistent Memory
+
+### Fixed
+
+- Debug code is now compiled in debug builds, not in release builds
+
 ## [0.2]
 
 ### Changed
@@ -15,5 +25,6 @@ All notable changes to this project will be documented in this file. The format 
 
 <!-- Links -->
 [Keep a Changelog]: https://keepachangelog.com/
+[0.3]  https://france.paratools.com/mpcalloc-0.3.tar.gz
 [0.2]  https://france.paratools.com/mpcalloc-0.2.tar.gz
 [0.1]: https://france.paratools.com/mpcalloc-0.1.tar.gz
